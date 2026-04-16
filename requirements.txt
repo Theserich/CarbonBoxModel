@@ -1,0 +1,8 @@
+
+numpy>=1.23
+scipy>=1.10
+pandas>=1.5
+matplotlib>=3.7
+emcee>=3.1
+xlsxwriter>=3.1
+numba>=0.57
