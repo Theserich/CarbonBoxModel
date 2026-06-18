@@ -36,7 +36,7 @@ def gaussfunc(t, amp, times, width=0.15):
 meandata = True
 prepostyears = 15
 
-data = loadexcel(projectPath/ Path('Data\\C14Records\\ETHALL2026-04-16.xlsx'))
+data = loadexcel(projectPath / Path('Data/C14Records/ETHALL2026-04-16.xlsx'))
 
 
 
