@@ -26,26 +26,28 @@ and the event is a Gaussian pulse centred on the spike year.
 CarbonBoxModel/
 │
 ├── Library/
-│   ├── BoxModel.py                 # FastSimulator class and Numba ODE kernel
-│   ├── MCMSpikefitterWithCycle.py  # MCMC spike+cycle fitter
-│   ├── MCMCFunctions.py            # General MCMC utilities
-│   ├── plotfunctions.py            # Plotting helpers and formatters
-│   ├── Functions.py                # Shared numerical utilities
-│   └── GlobalPathsAndConstants.py  # Project-wide paths and physical constants
+│   ├── BoxModel.py                    # Carbon-cycle box model + Numba ODE kernel
+│   ├── MCMSpikefitterWithCycle.py     # MCMC spike + solar-cycle fitter
+│   ├── MCMCFunctions.py               # MCMC utilities
+│   ├── plotfunctions.py               # Plotting helpers
+│   ├── Functions.py                   # Shared numerical utilities
+│   ├── dfFunctions.py                 # Data-frame and Δ14C helpers
+│   ├── GlobalPathsAndConstants.py     # Physical constants and project paths
+│   └── timerfunction.py               # Simple timing decorator
 │
-├── cycleEventFitter.py             # Main analysis script for Event fitting (MCMC fit + plots)
-├── SolomodReconstruction.py        # Main analysis script solar modulation reconstruction (MCMC fit + plots)
+├── SolomodReconstruction.py           # Solar modulation reconstruction (production → Φ)
+├── cycleEventFitter.py                # MCMC spike + cycle analysis script
 │
 ├── Data/
-│   ├── C14Records/                 # Measured Δ¹⁴C input data (Excel)
-│   └── IntCal/                     # IntCal20 calibration curve
+│   ├── C14Records/                    # Measured Δ14C input data (Excel)
+│   └── IntCal/                        # IntCal20 calibration data
 │
 ├── SimulationResults/
-│   └── SteadyStates/               # Cached steady-state reservoir vectors
+│   └── SteadyStates/                  # Cached steady-state reservoir vectors
 │
 └── Fluxes/
-    └── StandartFluxes.xlsx         # Inter-reservoir ¹²C flux matrix and
-                                    # production fractions per reservoir
+    └── StandartFluxes.xlsx            # Inter-reservoir flux matrix and production fractions
+
 ```
 
 ---
