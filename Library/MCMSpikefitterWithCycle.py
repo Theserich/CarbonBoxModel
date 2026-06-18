@@ -6,7 +6,7 @@ import copy
 from scipy.stats import halfnorm
 
 
-@cache_results(file_format='pickle',recalc=False, cache_dir="CycleSpikeFitterCache")
+@cache_results(file_format='npz',recalc=False, cache_dir="CycleSpikeFitterCache")
 def MCMCCycleSpikefitter(delta, deltasigm, years, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
@@ -123,7 +123,8 @@ def MCMCCycleSpikefitter(delta, deltasigm, years, eventyear=None, dt=0.1, totpro
     times, p, deltas = Sim.getSimulationResults()
     return Sim.times, p[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times), deltas[12], samples, weights, thetabest
 
-@timer
+
+@cache_results(file_format='npz',recalc=False, cache_dir="getsimulationsCache")
 def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=6.6e-12,thin=1):
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
