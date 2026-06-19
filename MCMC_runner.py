@@ -12,22 +12,21 @@ marginal scatter plots with 1D posterior histograms.
 
 
 import itertools
-from Library.MCMSpikefitterWithCycle import *
-import matplotlib.pyplot as plt
-import numpy as np
+from Library.MCMCSpikeFitter import *
 from Library.BoxModel import *
 from Library.plotfunctions import *
 from Library.MCMCFunctions import *
+from Library.EventDetrend import eventdetrenddataframe
 import argparse
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--year', type=float, required=True)
+parser.add_argument('--eventdetrend', type=bool, required=True)
 args = parser.parse_args()
 
-year = 1950 - args.year
-
-
+year = args.year
+eventdetrend = args.eventdetrend
 
 dt = 0.1
 totprod = 6.6e-12
@@ -40,8 +39,11 @@ def gaussfunc(t, amp, times, width=0.15):
 meandata = True
 prepostyears = 15
 
-data = loadexcel(projectPath/ Path('Data\\C14Records\\ETHALL2026-04-16.xlsx'))
 
+datalabel = 'Alldata2026-06-18'
+data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
+if eventdetrend:
+    data = eventdetrenddataframe(data, plotfit=False)
 
 
 data = calcD14C(data)
@@ -56,6 +58,7 @@ if meandata:
 else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitter(delta, deltasigm, years, eventyear=None, N=5000,burnin=1000,thin=1)#year+0.5
-times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=350)
+
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=3000,burnin=1000,thin=1,intcal=True)
+#times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=350)
 

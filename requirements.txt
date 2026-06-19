@@ -7,3 +7,4 @@ emcee>=3.1
 xlsxwriter>=3.1
 numba>=0.57
 openpyxl
+tqdm
