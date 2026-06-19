@@ -29,7 +29,7 @@ def sliceData(df,t0,t1,bp=False):
         retdf[key] = retdf[key][idx]
     return retdf
 
-@cache_results(file_format='pickle', cache_dir='eventdetrend')
+#@cache_results(file_format='pickle', cache_dir='eventdetrend')
 def eventdetrenddataframe(df,plotfit=False):
     dt = 0.1
     totprod = 6.6e-12

@@ -40,8 +40,8 @@ prepostyears = 15
 
 datalabel = 'Alldata2026-06-18'
 data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
-if eventdetrend:
-    data = eventdetrenddataframe(data, plotfit=False)
+#if eventdetrend:
+#    data = eventdetrenddataframe(data, plotfit=False)
 
 
 data = calcD14C(data)
