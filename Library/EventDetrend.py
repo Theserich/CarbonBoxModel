@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from Library.MCMCFunctions import *
 from Library.BoxModel import *
 from Library.plotfunctions import *
-from Library.MCMCSpikeFitter import MCMCSpikeDetrenderCycle
+from Library.MCMCSpikeFitter import MCMCSpikeDetrenderCycle, getsimulations
 
 
 def gaussfunc(t, amp, times, width=0.15):
@@ -33,7 +33,7 @@ def sliceData(df,t0,t1,bp=False):
 def eventdetrenddataframe(df,plotfit=False):
     dt = 0.1
     totprod = 6.6e-12
-    data = loadexcel(projectPath / Path('Data\\C14Records\\Alldata2026-06-18.xlsx'))
+    data = loadexcel(projectPath / Path('Data/C14Records/Alldata2026-06-18.xlsx'))
     data = calcD14C(data)
     retdf = calcD14C(df)
     eventdatadict = {'7175 BCE': {'data': sliceData(data,t0=1950+7175-15, t1=1950+7175+15,bp=True)},
