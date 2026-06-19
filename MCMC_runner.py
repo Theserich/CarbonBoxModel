@@ -22,9 +22,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--year', type=float, required=True)
 parser.add_argument('--eventdetrend', type=bool, required=True)
 args = parser.parse_args()
-
 year = args.year
 eventdetrend = args.eventdetrend
+
+#year = 775
+#eventdetrend = False
 
 dt = 0.1
 totprod = 6.6e-12
@@ -57,6 +59,6 @@ else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=3000,burnin=1000,thin=1,intcal=True)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=2000,burnin=1000,thin=1,intcal=True)
 #times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=350)
 

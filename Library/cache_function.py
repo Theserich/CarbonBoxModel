@@ -53,12 +53,35 @@ def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debu
                 obj.bounds_error,
                 str(obj.fill_value),
             )
+        elif callable(obj) and (inspect.isfunction(obj) or inspect.ismethod(obj)):
+            # Hash functions/callables by their normalized source code,
+            # not by pickling the function object itself (which is
+            # platform/identity dependent and can differ across machines).
+            return ("__callable__", normalize_source(obj))
         elif isinstance(obj, (list, tuple)):
             return tuple(normalize(i) for i in obj)
         elif isinstance(obj, dict):
             return tuple(sorted((k, normalize(v)) for k, v in obj.items()))
         else:
             return obj
+
+    def normalize_source(func_or_obj):
+        """
+        Return a platform-independent, whitespace/line-ending-insensitive
+        representation of a function's source code, for stable hashing
+        across Windows/Linux and across git checkouts.
+        """
+        try:
+            src = inspect.getsource(func_or_obj)
+        except (OSError, TypeError):
+            return repr(func_or_obj)
+        # Normalize line endings
+        src = src.replace('\r\n', '\n').replace('\r', '\n')
+        # Strip trailing whitespace per line and drop blank lines,
+        # so harmless formatting changes don't bust the cache.
+        lines = [line.rstrip() for line in src.split('\n')]
+        lines = [line for line in lines if line.strip() != '']
+        return '\n'.join(lines)
 
     def to_json(obj):
         if isinstance(obj, np.ndarray):
@@ -103,10 +126,6 @@ def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debu
         return obj
 
     def save_npz(result, path):
-        """
-        Save a tuple/list of numpy arrays to an .npz file.
-        'path' should NOT include the .npz extension (np.savez adds it).
-        """
         if not isinstance(result, (tuple, list)):
             raise ValueError(
                 f"npz format requires the cached function to return a tuple or list of numpy arrays, "
@@ -124,10 +143,6 @@ def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debu
         np.savez(path, n_arrays=len(result), **arrays)
 
     def load_npz(path):
-        """
-        Load a tuple of numpy arrays from an .npz file.
-        'path' should NOT include the .npz extension.
-        """
         d = np.load(path + ".npz", allow_pickle=False)
         n = int(d["n_arrays"])
         return tuple(d[f"arr_{i}"] for i in range(n))
@@ -136,26 +151,29 @@ def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debu
         @wraps(func)
         def wrapper(*args, **kwargs):
             # --- Hash ---
-            try:
-                func_source = inspect.getsource(func)
-            except OSError:
-                func_source = repr(func)
+            # Use the normalized source (line-ending and blank-line
+            # insensitive) instead of raw inspect.getsource(), so the
+            # same function produces the same hash on Windows and Linux.
+            func_source = normalize_source(func)
 
             norm_args = normalize(args)
             norm_kwargs = normalize(kwargs)
-            hash_bytes = pickle.dumps((func.__name__, func_source, norm_args, norm_kwargs), protocol=5)
-            key = hashlib.sha256(hash_bytes).hexdigest()
+
+            # Build the hash input as a JSON-serializable-ish, deterministic
+            # string instead of pickle bytes. Pickle protocol output can
+            # vary subtly with object identity/module paths across
+            # platforms/interpreter versions; repr() of our already-fully-
+            # normalized (plain python/numpy-bytes) structure is stable.
+            hash_input = repr((func.__name__, func_source, norm_args, norm_kwargs))
+            key = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
 
             # --- File paths ---
-            # For npz, np.savez automatically appends .npz, so we keep two variables:
-            #   cache_file     — the actual file on disk (used for os.path.exists)
-            #   cache_path     — the path passed to np.savez / np.load (without .npz)
             if file_format == "npz":
-                cache_path = os.path.join(cache_dir, key)       # no extension
-                cache_file = cache_path + ".npz"                 # actual file
+                cache_path = os.path.join(cache_dir, key)
+                cache_file = cache_path + ".npz"
             else:
                 cache_file = os.path.join(cache_dir, f"{key}.{file_format}")
-                cache_path = cache_file                          # same for json/pickle
+                cache_path = cache_file
 
             # --- Load ---
             if os.path.exists(cache_file) and not recalc:
@@ -176,7 +194,7 @@ def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debu
             elif file_format == "pickle":
                 with open(cache_file, "wb") as f:
                     pickle.dump(result, f)
-            else:  # json
+            else:
                 with open(cache_file, "w") as f:
                     json.dump(to_json(result), f, indent=4)
 
