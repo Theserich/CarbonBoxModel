@@ -9,8 +9,6 @@ supernova), and a constant background flux. Posterior samples are converted to
 physical units (kg and kg/yr) and visualised as time-series plots and 2D
 marginal scatter plots with 1D posterior histograms.
 """
-
-
 import itertools
 from Library.MCMCSpikeFitter import *
 from Library.BoxModel import *

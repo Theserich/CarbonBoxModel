@@ -4,7 +4,6 @@ import emcee
 from Library.MCMCFunctions import emcee_weights, weighted_quantile
 from scipy.stats import norm
 import copy
-from joblib import Parallel, delayed
 from scipy.stats import halfnorm
 
 

@@ -15,7 +15,7 @@ def gaussfunc(t, amp, times, width=0.15):
     return np.exp(-1 / 2 * (t - times) ** 2 / width ** 2) * amp*1e12
 
 eventdetrend = False
-years = [775]
+years = np.arange(0,50)
 
 datalabel = 'Alldata2026-06-18'
 data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
