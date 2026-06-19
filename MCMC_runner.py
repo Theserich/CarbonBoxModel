@@ -1,5 +1,5 @@
 """
-cycleEventFitter.py
+MCMC_runner.py
 
 Fits a radiocarbon (¹⁴C) production model to measured Δ¹⁴C records around a
 user-specified year, using Markov Chain Monte Carlo (MCMC) sampling. The model
