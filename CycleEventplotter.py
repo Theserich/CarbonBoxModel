@@ -15,7 +15,7 @@ def gaussfunc(t, amp, times, width=0.15):
     return np.exp(-1 / 2 * (t - times) ** 2 / width ** 2) * amp*1e12
 
 eventdetrend = False
-years = np.arange(0,50,dtype=int)
+allyears = np.arange(0,50,dtype=int)
 
 datalabel = 'Alldata2026-06-18'
 data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
@@ -35,7 +35,7 @@ prepostyears = 15
 
 data = calcD14C(data)
 intcal = True
-for year in years:
+for year in allyears:
     t0 = year-prepostyears
     t1 = year+prepostyears
     idx = np.where((data['bp']>=1950-t1)&(data['bp']<=1950-t0))[0]
@@ -46,7 +46,7 @@ for year in years:
         [delta, deltasigm, years] = getDeltafromDataframe(df)
     else:
         delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
-    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=3000,burnin=1000,thin=1,intcal=intcal)#year+0.5
+    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=2000,burnin=1000,thin=1,intcal=True)
     times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples, intcal=intcal,thin=100)
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
 
