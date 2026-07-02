@@ -13,10 +13,10 @@ module load python/3.11.6
 source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
 cd /cluster/scratch/nbrehm/CarbonBoxModel
 
-TOTAL_START=0
-TOTAL_END=1000
+TOTAL_START=-4000
+TOTAL_END=2000
 TOTAL_YEARS=$((TOTAL_END - TOTAL_START))
-N_JOBS=100
+N_JOBS=600
 CHUNK=$((TOTAL_YEARS / N_JOBS))
 
 YEAR_START=$((TOTAL_START + SLURM_ARRAY_TASK_ID * CHUNK))
