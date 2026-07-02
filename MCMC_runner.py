@@ -59,6 +59,6 @@ else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=2000,burnin=1000,thin=1,intcal=True)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=100,burnin=5,thin=1,intcal=True)
 #times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=350)
 

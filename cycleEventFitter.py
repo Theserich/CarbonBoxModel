@@ -16,7 +16,7 @@ from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
-year = 1950 - 3480
+year = 774
 
 eventdetrend = False
 
@@ -49,7 +49,8 @@ if meandata:
 else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=1000,burnin=100,thin=1)#year+0.5
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=100,burnin=5,thin=1,intcal=True)
+
 times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=50)
 
 Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', dt=dt)
