@@ -16,7 +16,7 @@ from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
-year = 771
+year = 4
 
 eventdetrend = False
 
@@ -31,7 +31,7 @@ def gaussfunc(t, amp, times, width=0.15):
 meandata = True
 prepostyears = 15
 
-datalabel = 'Alldata2026-06-18'
+
 data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
 if eventdetrend:
     data = eventdetrenddataframe(data, plotfit=False)

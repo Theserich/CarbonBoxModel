@@ -19,7 +19,6 @@ eventdetrend = False
 threshold = 3
 
 
-datalabel = 'Alldata2026-06-18'
 data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
 colors = itertools.cycle([f'C{i}' for i in range(10)])
 setPlotParams(14,figsize=(16, 16))

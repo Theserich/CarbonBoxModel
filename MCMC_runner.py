@@ -35,8 +35,6 @@ for year in range(int(year_start), int(year_end)):
     totprod = 6.6e-12
     meandata = True
     prepostyears = 15
-
-    datalabel = 'Alldata2026-06-18'
     data = loadexcel(projectPath / Path(f'Data/C14Records/{datalabel}.xlsx'))
     data = calcD14C(data)
 
