@@ -31,11 +31,6 @@ eventdetrend = args.eventdetrend
 dt = 0.1
 totprod = 6.6e-12
 
-
-def gaussfunc(t, amp, times, width=0.15):
-    return np.exp(-1 / 2 * (t - times) ** 2 / width ** 2) * amp*1e12
-
-
 meandata = True
 prepostyears = 15
 
@@ -59,6 +54,6 @@ else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=100,burnin=5,thin=1,intcal=True)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
 #times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=350)
 

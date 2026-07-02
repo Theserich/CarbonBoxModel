@@ -16,7 +16,7 @@ from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
-year = 774
+year = 771
 
 eventdetrend = False
 
@@ -49,7 +49,7 @@ if meandata:
 else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=100,burnin=5,thin=1,intcal=True)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
 
 times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=50)
 

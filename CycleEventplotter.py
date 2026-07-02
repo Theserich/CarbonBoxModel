@@ -46,7 +46,7 @@ for year in allyears:
         [delta, deltasigm, years] = getDeltafromDataframe(df)
     else:
         delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
-    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, N=2000,burnin=1000,thin=1,intcal=True)
+    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
     times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples, intcal=intcal,thin=100)
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
 
