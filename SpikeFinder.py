@@ -5,7 +5,7 @@ from scipy.signal import find_peaks
 from Library.EventDetrend import eventdetrenddataframe
 eventdetrend = False
 preposttime = 15
-t0,t1  = 770, 870
+t0,t1  = 0,1000
 
 
 
