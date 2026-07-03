@@ -27,7 +27,7 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
     allweights = []
     alltimes = []
     for year in np.arange(t00,t11):
-        print(year, end ='\r')
+        #print(year)
         t0 = year-preposttime
         t1 = year+preposttime
         idx = np.where((data['bp']>=1950-t1)&(data['bp']<=1950-t0))[0]
