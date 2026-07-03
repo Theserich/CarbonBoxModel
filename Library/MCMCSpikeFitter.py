@@ -124,7 +124,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 
 
 @cache_results_simple(file_format='npz',recalc=False, cache_dir="CycleSpikesearchCacheprior")
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, dt=0.1, totprod=6.6e-12, N=3000, burnin=1000, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, dt=0.1, totprod=6.6e-12, N=500, burnin=100, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
