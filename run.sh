@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=CycleSpikeFitter
-#SBATCH --time=08:00:00
-#SBATCH --mem-per-cpu=1G
+#SBATCH --time=02:00:00
+#SBATCH --mem-per-cpu=600M
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
 #SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
-#SBATCH --array=50-100
+#SBATCH --array=0-599
 
 module load stack/2024-06
 module load python/3.11.6

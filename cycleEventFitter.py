@@ -16,7 +16,7 @@ from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
-year = 4
+year = 0
 
 eventdetrend = False
 
