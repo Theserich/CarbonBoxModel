@@ -6,7 +6,7 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
 #SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
-#SBATCH --array=100-199
+#SBATCH --array=50-100
 
 module load stack/2024-06
 module load python/3.11.6
