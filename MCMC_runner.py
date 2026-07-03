@@ -49,6 +49,4 @@ for year in range(int(year_start), int(year_end)):
     else:
         delta, deltasigm, years_data = df['delta'], df['delta_sig'], df['year']
 
-    simtimes, production, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(
-        delta, deltasigm, years_data, logprior
-    )
+    simtimes, production, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years_data, logprior)
