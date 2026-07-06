@@ -28,6 +28,10 @@ year_end = args.year_end
 eventdetrend = args.eventdetrend.lower() == 'true'
 meandata = True
 
+data = loadexcel(projectPath / Path(f'Data/C14Records/{datalabel}.xlsx'))
+data = calcD14C(data)
+
+
 # Loop over all years in this chunk
 for year in range(int(year_start), int(year_end)):
     print(f"Processing year {year}", flush=True)
@@ -36,8 +40,7 @@ for year in range(int(year_start), int(year_end)):
     totprod = 6.6e-12
 
     prepostyears = 15
-    data = loadexcel(projectPath / Path(f'Data/C14Records/{datalabel}.xlsx'))
-    data = calcD14C(data)
+
 
     t0 = year - prepostyears
     t1 = year + prepostyears

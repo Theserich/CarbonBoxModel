@@ -73,7 +73,7 @@ def logprior(theta):
     lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale= 10 * totprod)
     return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
-@cache_results('pickle', cache_dir='yeardict')
+#@cache_results('pickle', cache_dir='yeardict')
 def get_yeardict(t0, t1, data,logprior,threshold=3,overlap=5):
     allsamples, alltimes = eventfinder(t0, t1, data,logprior)
     yearprobdict = {}
@@ -124,7 +124,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 
 
 @cache_results_simple(file_format='npz',recalc=False, cache_dir="CycleSpikesearchCacheprior")
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, dt=0.1, totprod=6.6e-12, N=2000, burnin=500, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, dt=0.1, totprod=6.6e-12, N=50, burnin=10, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
