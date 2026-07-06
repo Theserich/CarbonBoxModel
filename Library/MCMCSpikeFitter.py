@@ -27,7 +27,7 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
     allweights = []
     alltimes = []
     for year in np.arange(t00,t11):
-        #print(year)
+        print(year)
         t0 = year-preposttime
         t1 = year+preposttime
         idx = np.where((data['bp']>=1950-t1)&(data['bp']<=1950-t0))[0]
@@ -215,9 +215,9 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear=None, 
     log_prob = sampler.get_log_prob(discard=burnin, thin=thin, flat=True)
     weights = emcee_weights(sampler, burnin=burnin, thin=thin)
     autocorrtime = sampler.get_autocorr_time(quiet=True)
-    print(f"Autocorrelation time estimate: {autocorrtime}")
-    print(f"Chain length / tau: {N / autocorrtime}")
-    print(f"Effective sample size: {N * nwalkers / autocorrtime}")
+    #print(f"Autocorrelation time estimate: {autocorrtime}")
+    #print(f"Chain length / tau: {N / autocorrtime}")
+    #print(f"Effective sample size: {N * nwalkers / autocorrtime}")
     imax = np.argmax(log_prob)
     theta_map = samples[imax]
     thetabest = theta_map

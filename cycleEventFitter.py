@@ -192,7 +192,7 @@ ax[0].plot(convertCalendarToBCE(simtimes), simdeltas)
 
 xlim = ax[0].get_xlim()
 intcaldf = loadexcel(projectPath/'Data/IntCal/Intcal20.xlsx')
-intCalcurveidx = np.where((intcaldf['bp'] > 1950 - t0 - 50) & (intcaldf['bp'] < 1950 - t1 + 50))[0]
+intCalcurveidx = np.where((intcaldf['bp']  > 1950 - t0 - 50) & (intcaldf['bp'] < 1950 - t1 + 50))[0]
 for key in intcaldf.keys():
     intcaldf[key] = intcaldf[key][intCalcurveidx]
 idelta, ideltasigm, iyears = getDeltafromDataframe(intcaldf)

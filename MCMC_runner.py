@@ -26,6 +26,7 @@ args = parser.parse_args()
 year_start = args.year_start
 year_end = args.year_end
 eventdetrend = args.eventdetrend.lower() == 'true'
+meandata = True
 
 # Loop over all years in this chunk
 for year in range(int(year_start), int(year_end)):
@@ -33,7 +34,7 @@ for year in range(int(year_start), int(year_end)):
 
     dt = 0.1
     totprod = 6.6e-12
-    meandata = True
+
     prepostyears = 15
     data = loadexcel(projectPath / Path(f'Data/C14Records/{datalabel}.xlsx'))
     data = calcD14C(data)
@@ -44,6 +45,8 @@ for year in range(int(year_start), int(year_end)):
     df = {}
     for key in data.keys():
         df[key] = data[key][idx]
+    if len(df['bp']) < prepostyears / 3:
+        continue
     if meandata:
         [delta, deltasigm, years_data] = getDeltafromDataframe(df)
     else:
