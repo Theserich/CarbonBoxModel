@@ -4,7 +4,7 @@ from matplotlib import pyplot as plt
 from scipy import signal
 from Library.dfFunctions import *
 from scipy.interpolate import interp1d, UnivariateSpline, CubicSpline
-from Library.cache_function import cache_results, cache_results_simple
+from Library.cache_function import cache_results, cache_results_Cluster
 from Library.GlobalPathsAndConstants import *
 
 

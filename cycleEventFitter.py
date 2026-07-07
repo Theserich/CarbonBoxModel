@@ -49,7 +49,7 @@ if meandata:
 else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,year)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
 
 times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=50)
 
