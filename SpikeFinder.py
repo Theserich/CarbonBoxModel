@@ -19,15 +19,15 @@ eventdetrend = False
 threshold = 3
 
 
-data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
+dataframe = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
 colors = itertools.cycle([f'C{i}' for i in range(10)])
 setPlotParams(14,figsize=(16, 16))
 
 
 if eventdetrend:
-    data = eventdetrenddataframe(data, plotfit=False)
+    dataframe = eventdetrenddataframe(dataframe, plotfit=False)
 
-dfs = [data]
+dfs = [dataframe]
 labels = [datalabel]
 
 fig, ax = plt.subplots(len(dfs),sharex=True)

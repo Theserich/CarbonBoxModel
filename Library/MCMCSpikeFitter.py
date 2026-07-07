@@ -26,7 +26,7 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
     allsamples = []
     allweights = []
     alltimes = []
-    for year in np.arange(t00,t11):
+    for year in range(int(t00),int(t11)):
         print(year)
         t0 = year-preposttime
         t1 = year+preposttime
@@ -127,7 +127,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     file_format='npz', cache_dir="CycleSpikesearchCacheprior",
     label_fn=lambda delta, deltasigm, years,logprior,eventyear, **kw: int(eventyear),float_decimals=4
 )
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear, dt=0.1, totprod=6.6e-12, N=50, burnin=10, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear, dt=0.1, totprod=6.6e-12, N=2000, burnin=500, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
