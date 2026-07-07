@@ -125,7 +125,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 
 @cache_results_simple(
     file_format='npz', cache_dir="CycleSpikesearchCacheprior",
-    label_fn=lambda delta, deltasigm, years,logprior,eventyear, **kw: int(eventyear)
+    label_fn=lambda delta, deltasigm, years,logprior,eventyear, **kw: int(eventyear),float_decimals=4
 )
 def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, eventyear, dt=0.1, totprod=6.6e-12, N=50, burnin=10, thin=1,intcal=True):
     sig0 = deltasigm[0]

@@ -1,25 +1,3 @@
-from time import time
-import numpy as np
-import os
-import hashlib
-import json
-import pickle
-import functools
-from functools import wraps
-from scipy.interpolate import interp1d
-import inspect
-from Library.dfFunctions import datadict
-import logging
-
-logger = logging.getLogger('Main logger')
-logger.setLevel(logging.INFO)
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
-
-
-
 import os
 import time
 import socket
@@ -43,25 +21,34 @@ formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-
 def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
-                          print_debug=True, label_fn=None, float_decimals=8):
+                          print_debug=True, label_fn=None, key_fn=None,
+                          float_decimals=4):
     """
-    float_decimals: number of decimal places floats are rounded to *only for
-    the purposes of computing the cache key*. This makes the hash robust to
-    platform-level floating-point noise (different BLAS/LAPACK builds,
-    different numpy versions, AVX vs non-AVX code paths, cluster vs laptop,
-    etc.) that can otherwise make bit-identical-looking values hash
-    differently. It does NOT affect the actual stored/returned data -- only
-    the bytes that go into the sha256 key.
+    key_fn: if given, called as key_fn(**bound_arguments) using the function's
+        real parameter names (with defaults applied). Its return value is
+        used to build the cache key INSTEAD OF hashing the array arguments.
+        Use this for anything derived from measurement data (means, fits,
+        interpolations) -- those can differ at the bit level across
+        machines/numpy/BLAS versions even when "correct". Stable identifiers
+        (year, eventyear, dt, N, ...) do not have this problem, so keying on
+        them directly is the robust fix rather than trying to tolerance-round
+        floats that may or may not actually agree.
+
+    float_decimals: only used as a fallback when key_fn is not given. Rounds
+        float arrays/scalars to this many decimal places before hashing, to
+        absorb tiny cross-platform floating point noise. Because your
+        arguments can span very different magnitudes (e.g. ~1e-12 vs ~1e3),
+        a single absolute decimal count is a blunt instrument -- prefer
+        key_fn whenever you can express a stable identity for the call.
+        Leave as None to disable (hash exact bytes, old behavior).
     """
     assert file_format in ["json", "pickle", "npz"]
     os.makedirs(cache_dir, exist_ok=True)
 
     def round_floats(arr):
-        """Round a float array to float_decimals before taking bytes, so
-        tiny last-bit differences from platform/BLAS variation collapse to
-        the same hash. NaNs are handled separately by the caller."""
+        if float_decimals is None:
+            return arr
         return np.round(arr, decimals=float_decimals)
 
     def normalize(obj):
@@ -97,31 +84,21 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
                 str(obj.fill_value),
             )
         elif callable(obj) and (inspect.isfunction(obj) or inspect.ismethod(obj)):
-            # Hash functions/callables by their normalized source code,
-            # not by pickling the function object itself (which is
-            # platform/identity dependent and can differ across machines).
             return ("__callable__", normalize_source(obj))
         elif isinstance(obj, (list, tuple)):
             return tuple(normalize(i) for i in obj)
         elif isinstance(obj, dict):
             return tuple(sorted((k, normalize(v)) for k, v in obj.items()))
         elif isinstance(obj, (float, np.floating)):
-            # Plain python/numpy float scalars (e.g. eventyear=-3279.0,
-            # a bare kwarg, etc.) get the same rounding treatment so a
-            # scalar computed slightly differently on two machines still
-            # hashes identically.
             if np.isnan(obj):
                 return ("__nan__",)
+            if float_decimals is None:
+                return ("__float__", obj)
             return ("__float__", round(float(obj), float_decimals))
         else:
             return obj
 
     def normalize_source(func_or_obj):
-        """
-        Return a platform-independent, whitespace/line-ending-insensitive
-        representation of a function's source code, for stable hashing
-        across Windows/Linux and across git checkouts.
-        """
         try:
             src = inspect.getsource(func_or_obj)
         except (OSError, TypeError):
@@ -133,27 +110,15 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
 
     def to_json(obj):
         if isinstance(obj, np.ndarray):
-            return {
-                "__type__": "ndarray",
-                "dtype": str(obj.dtype),
-                "shape": obj.shape,
-                "data": obj.tolist()
-            }
+            return {"__type__": "ndarray", "dtype": str(obj.dtype),
+                    "shape": obj.shape, "data": obj.tolist()}
         elif isinstance(obj, interp1d):
-            return {
-                "__type__": "interp1d",
-                "x": obj.x.tolist(),
-                "y": obj.y.tolist(),
-                "bounds_error": obj.bounds_error,
-                "fill_value": obj.fill_value
-            }
+            return {"__type__": "interp1d", "x": obj.x.tolist(), "y": obj.y.tolist(),
+                    "bounds_error": obj.bounds_error, "fill_value": obj.fill_value}
         elif isinstance(obj, (list, tuple)):
             return [to_json(i) for i in obj]
         elif isinstance(obj, datadict):
-            return {
-                "__type__": "datadict",
-                "data": {k: to_json(v) for k, v in obj.items()}
-            }
+            return {"__type__": "datadict", "data": {k: to_json(v) for k, v in obj.items()}}
         elif isinstance(obj, dict):
             return {k: to_json(v) for k, v in obj.items()}
         else:
@@ -174,11 +139,6 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
         return obj
 
     def save_npz(result, path):
-        """Write atomically: build the archive under a temp name in the same
-        directory, then os.replace() it into place. os.replace is atomic on
-        POSIX filesystems, so a job that gets OOM-killed or hits the walltime
-        limit mid-write can never leave a corrupt/truncated cache file behind
-        -- readers only ever see either nothing or a complete file."""
         if not isinstance(result, (tuple, list)):
             raise ValueError(
                 f"npz format requires the cached function to return a tuple or list of numpy arrays, "
@@ -203,11 +163,6 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
         return tuple(d[f"arr_{i}"] for i in range(n))
 
     def write_manifest(entry):
-        """One manifest file per process (keyed by SLURM array task id if
-        present, else PID) so concurrent array tasks on a shared/NFS scratch
-        filesystem never write to the same file at once. Merge them later
-        with `cat _manifest_*.jsonl > all_manifest.jsonl` for a full picture
-        of what ran, what hit cache, what failed, and how long it took."""
         task_id = os.environ.get("SLURM_ARRAY_TASK_ID", f"pid{os.getpid()}")
         manifest_path = os.path.join(cache_dir, f"_manifest_{task_id}.jsonl")
         try:
@@ -220,26 +175,33 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # --- Hash ---
-            # Only the function name and its normalized positional args
-            # go into the hash. Kwargs and source code are intentionally
-            # excluded from the cache key. Floats are rounded (see
-            # float_decimals) so the key is stable across machines/BLAS.
-            norm_args = normalize(args)
-
-            hash_input = repr((func.__name__, norm_args))
-            key = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
-
-            # --- Human-readable label ---
-            # Purely cosmetic: doesn't affect the hash/correctness, just makes
-            # the cache directory browsable (e.g. `ls | sort` shows years in
-            # order) instead of being an opaque list of hex strings.
-            label = None
-            if label_fn is not None:
+            bound = None
+            if key_fn is not None or label_fn is not None:
                 try:
                     sig = inspect.signature(func)
                     bound = sig.bind(*args, **kwargs)
                     bound.apply_defaults()
+                except Exception as e:
+                    if print_debug:
+                        logger.info(f"Could not bind arguments for key_fn/label_fn ({e})")
+
+            # --- Hash / key ---
+            if key_fn is not None and bound is not None:
+                try:
+                    key_identity = key_fn(**bound.arguments)
+                    hash_input = repr((func.__name__, key_identity))
+                except Exception as e:
+                    if print_debug:
+                        logger.info(f"key_fn failed ({e}); falling back to array hashing")
+                    hash_input = repr((func.__name__, normalize(args)))
+            else:
+                hash_input = repr((func.__name__, normalize(args)))
+            key = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
+
+            # --- Human-readable label (cosmetic only) ---
+            label = None
+            if label_fn is not None and bound is not None:
+                try:
                     label = label_fn(**bound.arguments)
                 except Exception as e:
                     if print_debug:
@@ -258,11 +220,9 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             if os.path.exists(cache_file) and not recalc:
                 if print_debug:
                     logger.info(f"{func.__name__}: Loading cached result from {cache_file}")
-                write_manifest({
-                    "func": func.__name__, "label": label, "key": key,
-                    "status": "hit", "file": cache_file,
-                    "time": datetime.now(timezone.utc).isoformat(),
-                })
+                write_manifest({"func": func.__name__, "label": label, "key": key,
+                                 "status": "hit", "file": cache_file,
+                                 "time": datetime.now(timezone.utc).isoformat()})
                 if file_format == "npz":
                     return load_npz(cache_path)
                 with open(cache_file, "rb" if file_format == "pickle" else "r") as f:
@@ -274,13 +234,10 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             try:
                 result = func(*args, **kwargs)
             except Exception as e:
-                write_manifest({
-                    "func": func.__name__, "label": label, "key": key,
-                    "status": "failed", "error": repr(e),
-                    "duration_s": time.time() - t0,
-                    "host": socket.gethostname(),
-                    "time": datetime.now(timezone.utc).isoformat(),
-                })
+                write_manifest({"func": func.__name__, "label": label, "key": key,
+                                 "status": "failed", "error": repr(e),
+                                 "duration_s": time.time() - t0, "host": socket.gethostname(),
+                                 "time": datetime.now(timezone.utc).isoformat()})
                 raise
             duration = time.time() - t0
 
@@ -297,12 +254,10 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             if print_debug:
                 logger.info(f"{func.__name__}: Saved result to {cache_file}")
 
-            write_manifest({
-                "func": func.__name__, "label": label, "key": key,
-                "status": "computed", "file": cache_file,
-                "duration_s": duration, "host": socket.gethostname(),
-                "time": datetime.now(timezone.utc).isoformat(),
-            })
+            write_manifest({"func": func.__name__, "label": label, "key": key,
+                             "status": "computed", "file": cache_file,
+                             "duration_s": duration, "host": socket.gethostname(),
+                             "time": datetime.now(timezone.utc).isoformat()})
             return result
         return wrapper
     return decorator
