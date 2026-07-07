@@ -4,6 +4,7 @@ import os
 import hashlib
 import json
 import pickle
+import functools
 from functools import wraps
 from scipy.interpolate import interp1d
 import inspect
@@ -17,7 +18,34 @@ formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
 handler.setFormatter(formatter)
 logger.addHandler(handler)
 
-def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, print_debug=True):
+
+
+import os
+import time
+import socket
+import hashlib
+import json
+import pickle
+from datetime import datetime, timezone
+from functools import wraps
+
+import numpy as np
+from scipy.interpolate import interp1d
+import inspect
+
+from Library.dfFunctions import datadict
+import logging
+
+logger = logging.getLogger('Main logger')
+logger.setLevel(logging.INFO)
+handler = logging.StreamHandler()
+formatter = logging.Formatter("%(levelname)s:%(name)s:%(message)s")
+handler.setFormatter(formatter)
+logger.addHandler(handler)
+
+
+def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
+                          print_debug=True, label_fn=None):
     assert file_format in ["json", "pickle", "npz"]
     os.makedirs(cache_dir, exist_ok=True)
 
@@ -125,6 +153,11 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, pri
         return obj
 
     def save_npz(result, path):
+        """Write atomically: build the archive under a temp name in the same
+        directory, then os.replace() it into place. os.replace is atomic on
+        POSIX filesystems, so a job that gets OOM-killed or hits the walltime
+        limit mid-write can never leave a corrupt/truncated cache file behind
+        -- readers only ever see either nothing or a complete file."""
         if not isinstance(result, (tuple, list)):
             raise ValueError(
                 f"npz format requires the cached function to return a tuple or list of numpy arrays, "
@@ -139,12 +172,31 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, pri
                     f"npz format: element {i} of the result could not be converted to a numpy array. "
                     f"Use file_format='json' or 'pickle' for complex return types. Original error: {e}"
                 )
-        np.savez(path, n_arrays=len(result), **arrays)
+        tmp_path = f"{path}.tmp-{os.getpid()}-{time.time_ns()}"
+        np.savez(tmp_path, n_arrays=len(result), **arrays)
+        # np.savez appends ".npz" to whatever path it's given
+        os.replace(tmp_path + ".npz", path + ".npz")
 
     def load_npz(path):
         d = np.load(path + ".npz", allow_pickle=False)
         n = int(d["n_arrays"])
         return tuple(d[f"arr_{i}"] for i in range(n))
+
+    def write_manifest(entry):
+        """One manifest file per process (keyed by SLURM array task id if
+        present, else PID) so concurrent array tasks on a shared/NFS scratch
+        filesystem never write to the same file at once. Merge them later
+        with `cat _manifest_*.jsonl > all_manifest.jsonl` for a full picture
+        of what ran, what hit cache, what failed, and how long it took."""
+        task_id = os.environ.get("SLURM_ARRAY_TASK_ID", f"pid{os.getpid()}")
+        manifest_path = os.path.join(cache_dir, f"_manifest_{task_id}.jsonl")
+        try:
+            with open(manifest_path, "a") as f:
+                f.write(json.dumps(entry, default=str) + "\n")
+        except Exception as e:
+            # Manifest logging should never break the actual caching behavior.
+            if print_debug:
+                logger.info(f"Could not write manifest entry: {e}")
 
     def decorator(func):
         @wraps(func)
@@ -158,18 +210,36 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, pri
             hash_input = repr((func.__name__, norm_args))
             key = hashlib.sha256(hash_input.encode('utf-8')).hexdigest()
 
+            # --- Human-readable label ---
+            # Purely cosmetic: doesn't affect the hash/correctness, just makes
+            # the cache directory browsable (e.g. `ls | sort` shows years in
+            # order) instead of being an opaque list of hex strings.
+            label = None
+            if label_fn is not None:
+                try:
+                    label = label_fn(*args, **kwargs)
+                except Exception as e:
+                    if print_debug:
+                        logger.info(f"label_fn failed ({e}); falling back to hash-only filename")
+            prefix = f"{label}__" if label is not None else ""
+
             # --- File paths ---
             if file_format == "npz":
-                cache_path = os.path.join(cache_dir, key)
+                cache_path = os.path.join(cache_dir, f"{prefix}{key}")
                 cache_file = cache_path + ".npz"
             else:
-                cache_file = os.path.join(cache_dir, f"{key}.{file_format}")
+                cache_file = os.path.join(cache_dir, f"{prefix}{key}.{file_format}")
                 cache_path = cache_file
 
             # --- Load ---
             if os.path.exists(cache_file) and not recalc:
                 if print_debug:
                     logger.info(f"{func.__name__}: Loading cached result from {cache_file}")
+                write_manifest({
+                    "func": func.__name__, "label": label, "key": key,
+                    "status": "hit", "file": cache_file,
+                    "time": datetime.now(timezone.utc).isoformat(),
+                })
                 if file_format == "npz":
                     return load_npz(cache_path)
                 with open(cache_file, "rb" if file_format == "pickle" else "r") as f:
@@ -177,7 +247,19 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, pri
                 return from_json(data) if file_format == "json" else data
 
             # --- Compute ---
-            result = func(*args, **kwargs)
+            t0 = time.time()
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:
+                write_manifest({
+                    "func": func.__name__, "label": label, "key": key,
+                    "status": "failed", "error": repr(e),
+                    "duration_s": time.time() - t0,
+                    "host": socket.gethostname(),
+                    "time": datetime.now(timezone.utc).isoformat(),
+                })
+                raise
+            duration = time.time() - t0
 
             # --- Save ---
             if file_format == "npz":
@@ -192,10 +274,14 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False, pri
             if print_debug:
                 logger.info(f"{func.__name__}: Saved result to {cache_file}")
 
+            write_manifest({
+                "func": func.__name__, "label": label, "key": key,
+                "status": "computed", "file": cache_file,
+                "duration_s": duration, "host": socket.gethostname(),
+                "time": datetime.now(timezone.utc).isoformat(),
+            })
             return result
-
         return wrapper
-
     return decorator
 
 def cache_results(file_format="npz", cache_dir="cache", recalc=False, print_debug=True):

@@ -45,7 +45,7 @@ for year in allyears:
         [delta, deltasigm, years] = getDeltafromDataframe(df)
     else:
         delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
-    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
+    simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,year)
     times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples, intcal=intcal,thin=100)
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
 
@@ -99,12 +99,6 @@ for year in allyears:
         params_settings[key]['posterior'] = posterior
 
     pairs = [(0,1) ,(2, 0),(4,5),(3,5)]
-    def get_stats(samples, weights):
-        # Weighted mean (Peak/Centroid)
-        mean = np.average(samples)
-        # Weighted variance
-        var = np.average((samples - mean)**2)
-        return mean, np.sqrt(var)
 
     # Calculate stats for each physical parameter directly
     stats = {}

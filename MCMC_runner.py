@@ -35,7 +35,7 @@ data = calcD14C(data)
 # Loop over all years in this chunk
 for year in range(int(year_start), int(year_end)):
     print(f"Processing year {year}", flush=True)
-
+    print(year)
     dt = 0.1
     totprod = 6.6e-12
 
@@ -55,4 +55,4 @@ for year in range(int(year_start), int(year_end)):
     else:
         delta, deltasigm, years_data = df['delta'], df['delta_sig'], df['year']
 
-    simtimes, production, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years_data, logprior)
+    simtimes, production, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years_data, logprior,year)
