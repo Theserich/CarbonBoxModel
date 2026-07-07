@@ -45,9 +45,24 @@ logger.addHandler(handler)
 
 
 def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
-                          print_debug=True, label_fn=None):
+                          print_debug=True, label_fn=None, float_decimals=8):
+    """
+    float_decimals: number of decimal places floats are rounded to *only for
+    the purposes of computing the cache key*. This makes the hash robust to
+    platform-level floating-point noise (different BLAS/LAPACK builds,
+    different numpy versions, AVX vs non-AVX code paths, cluster vs laptop,
+    etc.) that can otherwise make bit-identical-looking values hash
+    differently. It does NOT affect the actual stored/returned data -- only
+    the bytes that go into the sha256 key.
+    """
     assert file_format in ["json", "pickle", "npz"]
     os.makedirs(cache_dir, exist_ok=True)
+
+    def round_floats(arr):
+        """Round a float array to float_decimals before taking bytes, so
+        tiny last-bit differences from platform/BLAS variation collapse to
+        the same hash. NaNs are handled separately by the caller."""
+        return np.round(arr, decimals=float_decimals)
 
     def normalize(obj):
         if isinstance(obj, np.ndarray):
@@ -62,6 +77,7 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
                 nan_mask = np.isnan(arr)
                 arr2 = arr.copy()
                 arr2[nan_mask] = 0.0
+                arr2 = round_floats(arr2)
                 return (
                     "__ndarray_float__",
                     arr.shape,
@@ -75,8 +91,8 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
         elif isinstance(obj, interp1d):
             return (
                 "__interp1d__",
-                obj.x.tobytes(),
-                obj.y.tobytes(),
+                round_floats(obj.x).tobytes(),
+                round_floats(obj.y).tobytes(),
                 obj.bounds_error,
                 str(obj.fill_value),
             )
@@ -89,6 +105,14 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             return tuple(normalize(i) for i in obj)
         elif isinstance(obj, dict):
             return tuple(sorted((k, normalize(v)) for k, v in obj.items()))
+        elif isinstance(obj, (float, np.floating)):
+            # Plain python/numpy float scalars (e.g. eventyear=-3279.0,
+            # a bare kwarg, etc.) get the same rounding treatment so a
+            # scalar computed slightly differently on two machines still
+            # hashes identically.
+            if np.isnan(obj):
+                return ("__nan__",)
+            return ("__float__", round(float(obj), float_decimals))
         else:
             return obj
 
@@ -102,10 +126,7 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             src = inspect.getsource(func_or_obj)
         except (OSError, TypeError):
             return repr(func_or_obj)
-        # Normalize line endings
         src = src.replace('\r\n', '\n').replace('\r', '\n')
-        # Strip trailing whitespace per line and drop blank lines,
-        # so harmless formatting changes don't bust the cache.
         lines = [line.rstrip() for line in src.split('\n')]
         lines = [line for line in lines if line.strip() != '']
         return '\n'.join(lines)
@@ -174,7 +195,6 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
                 )
         tmp_path = f"{path}.tmp-{os.getpid()}-{time.time_ns()}"
         np.savez(tmp_path, n_arrays=len(result), **arrays)
-        # np.savez appends ".npz" to whatever path it's given
         os.replace(tmp_path + ".npz", path + ".npz")
 
     def load_npz(path):
@@ -194,7 +214,6 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             with open(manifest_path, "a") as f:
                 f.write(json.dumps(entry, default=str) + "\n")
         except Exception as e:
-            # Manifest logging should never break the actual caching behavior.
             if print_debug:
                 logger.info(f"Could not write manifest entry: {e}")
 
@@ -204,7 +223,8 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             # --- Hash ---
             # Only the function name and its normalized positional args
             # go into the hash. Kwargs and source code are intentionally
-            # excluded from the cache key.
+            # excluded from the cache key. Floats are rounded (see
+            # float_decimals) so the key is stable across machines/BLAS.
             norm_args = normalize(args)
 
             hash_input = repr((func.__name__, norm_args))
@@ -217,7 +237,10 @@ def cache_results_simple(file_format="npz", cache_dir="cache", recalc=False,
             label = None
             if label_fn is not None:
                 try:
-                    label = label_fn(*args, **kwargs)
+                    sig = inspect.signature(func)
+                    bound = sig.bind(*args, **kwargs)
+                    bound.apply_defaults()
+                    label = label_fn(**bound.arguments)
                 except Exception as e:
                     if print_debug:
                         logger.info(f"label_fn failed ({e}); falling back to hash-only filename")
