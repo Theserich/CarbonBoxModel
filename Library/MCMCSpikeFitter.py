@@ -8,7 +8,7 @@ import copy
 from scipy.stats import halfnorm
 
 #datalabel = 'Alldata2026-06-18'
-datalabel = 'Alldata2026-07-02'
+datalabel = 'Alldata2026-07-08'
 dt = 0.1
 totprod = 6.6e-12
 
