@@ -1,6 +1,7 @@
 from Library.BoxModel import *
 from Library.MCMCFunctions import weighted_quantile
 import emcee
+from Library.cache_function import cache_results, cache_results2, cache_results_Cluster
 from Library.MCMCFunctions import emcee_weights, weighted_quantile
 from scipy.stats import norm
 import copy
@@ -38,6 +39,9 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
             continue
         alltimes.append(year)
         [delta, deltasigm, years] = getDeltafromDataframe(df)
+        print(delta)
+        print(deltasigm)
+        print(years)
         simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
         theta_map_phys = theta_map.copy()
         theta_map_phys[0] = np.sum(
@@ -134,8 +138,8 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,pr
         box0 = copy.deepcopy(Sim.getstartState(startdelta, 12, preTime=10))
     fixsimtimes = np.arange(min(years) - 5, max(years) + 5, dt)
     if eventyear is None:
-        maxyear = max(years)-10
-        minyear = min(years)+10
+        maxyear = max(years)-prepost
+        minyear = min(years)+prepost
         yearstep = (max(years) - min(years)) / 3
         diffs = np.diff(delta)
         spikeyear = years[np.argmax(diffs)]
@@ -238,7 +242,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,pr
 
 
 
-@cache_results(file_format='npz', recalc=False, cache_dir="SpikedetrenderCycleCache")
+@cache_results2(file_format='npz', recalc=False, cache_dir="SpikedetrenderCycleCache")
 def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True):
     [delta, deltasigm, years] = getDeltafromDataframe(df)
     sig0 = deltasigm[0]
@@ -361,7 +365,7 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
     return Sim.times, p[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times), deltas[12],deltasnoevent[12], samples, weights, theta_map
 
 
-@cache_results(file_format='npz',recalc=False, cache_dir="getsimulationsCache")
+@cache_results2(file_format='npz',recalc=False, cache_dir="getsimulationsCache")
 def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=6.6e-12,thin=1,bonusyears=0):
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)

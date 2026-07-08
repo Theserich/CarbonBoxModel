@@ -5,7 +5,7 @@ from scipy.signal import find_peaks
 from Library.EventDetrend import eventdetrenddataframe
 eventdetrend = False
 preposttime = 15
-t0,t1  = -4000, 2000
+t0,t1  = 1000, 2000
 
 
 
@@ -84,11 +84,8 @@ xticks = ax[-1].get_xticks()
 locs = np.arange(min(xticks),max(xticks),100)
 minorLocator = FixedLocator(locs)
 ax[-1].xaxis.set_minor_locator(minorLocator)
-
-
 ax[-1].xaxis.set_major_formatter(FuncFormatter(CE_BCE_format))
 plt.subplots_adjust(hspace=0)
-
 folder = Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs')
 plotname = folder / f'SpikeFinderCycle_{labels}{threshold}kg.png'
 plt.savefig(plotname, dpi=300,bbox_inches='tight')
