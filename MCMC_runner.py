@@ -16,6 +16,9 @@ from Library.plotfunctions import *
 from Library.MCMCFunctions import *
 from Library.EventDetrend import eventdetrenddataframe
 import argparse
+from pathlib import Path
+import re
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--year_start', type=float, required=True)
@@ -28,8 +31,27 @@ year_end = args.year_end
 eventdetrend = args.eventdetrend.lower() == 'true'
 meandata = True
 
-data = loadexcel(projectPath / Path(f'Data/C14Records/{datalabel}.xlsx'))
+print(eventdetrend)
+
+
+
+label = 'Alldata'
+data_dir = projectPath / Path('Data/C14Records/')
+files = list(data_dir.glob(f'{label}*.xlsx'))
+
+def extract_date(f):
+    match = re.search(r'(\d{4}-\d{2}-\d{2})', f.name)
+    return match.group(1) if match else ''
+
+latest_file = max(files, key=extract_date)
+datalabel = latest_file.stem  # e.g. 'Alldata2026-07-08'
+
+print(f"Using data file: {datalabel}", flush=True)
+data = loadexcel(latest_file)
 data = calcD14C(data)
+
+if eventdetrend:
+    data = eventdetrenddataframe(data)
 
 
 # Loop over all years in this chunk

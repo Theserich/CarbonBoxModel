@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --job-name=CycleSpikeFitter
 #SBATCH --time=02:00:00
-#SBATCH --mem-per-cpu=600M
+#SBATCH --mem-per-cpu=1G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
