@@ -120,8 +120,11 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 
 
 
-@cache_results_Cluster(cache_dir="CycleSpikesearchCacheprior",
-    label_fn=lambda delta, deltasigm, years,logprior, **kw: int(np.mean(years)),float_decimals=2
+@cache_results_Cluster(
+    cache_dir="CycleSpikesearchCacheprior",
+    label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
+    key_fn=lambda delta, deltasigm, years, logprior: (int(np.min(years)), int(np.max(years))),
+    float_decimals=2
 )
 def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=10, dt=0.1, totprod=6.6e-12, N=20, burnin=10, thin=1,intcal=True):
     sig0 = deltasigm[0]
