@@ -129,7 +129,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
          eventyear, prepost, dt, totprod, N, burnin, thin, intcal),
     float_decimals=2
 )
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=10, dt=0.1, totprod=6.6e-12, N=20, burnin=10, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=10, dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)

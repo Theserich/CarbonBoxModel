@@ -6,14 +6,14 @@
 #SBATCH --cpus-per-task=1
 #SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
 #SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
-#SBATCH --array=0-5
+#SBATCH --array=500-540
 
 module load stack/2024-06
 module load python/3.11.6
 source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
 cd /cluster/scratch/nbrehm/CarbonBoxModel
 
-TOTAL_START=770
+TOTAL_START=-4000
 TOTAL_END=2000
 TOTAL_YEARS=$((TOTAL_END - TOTAL_START))
 
