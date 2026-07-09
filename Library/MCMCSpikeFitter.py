@@ -237,6 +237,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,pr
 
 
 
+
 @cache_results2(file_format='npz', recalc=False, cache_dir="SpikedetrenderCycleCache")
 def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True):
     [delta, deltasigm, years] = getDeltafromDataframe(df)
