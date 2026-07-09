@@ -13,14 +13,14 @@ module load python/3.11.6
 source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
 cd /cluster/scratch/nbrehm/CarbonBoxModel
 
-TOTAL_START=-4000
-TOTAL_END=2000
-TOTAL_YEARS=$((TOTAL_END - TOTAL_START))
+DATALABEL=${1:-Alldata}
+TOTAL_START=${2:--4000}    # NEW: year range now overridable, defaults match old behavior
+TOTAL_END=${3:-2000}       # NEW
 
 CHUNK=10
 
 YEAR_START=$((TOTAL_START + SLURM_ARRAY_TASK_ID * CHUNK))
 YEAR_END=$((YEAR_START + CHUNK))
 
-echo "Job $SLURM_ARRAY_TASK_ID: years $YEAR_START to $YEAR_END"
-python MCMC_runner.py --year_start $YEAR_START --year_end $YEAR_END --eventdetrend False
+echo "Job $SLURM_ARRAY_TASK_ID: years $YEAR_START to $YEAR_END, datalabel=$DATALABEL"
+python MCMC_runner.py --year_start $YEAR_START --yscancel ear_end $YEAR_END --eventdetrend False --datalabel $DATALABEL

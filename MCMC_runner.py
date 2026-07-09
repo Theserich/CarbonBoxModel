@@ -24,18 +24,17 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--year_start', type=float, required=True)
 parser.add_argument('--year_end', type=float, required=True)
 parser.add_argument('--eventdetrend', type=str, default='False')
+parser.add_argument('--datalabel', type=str, default='Alldata')   # NEW
 args = parser.parse_args()
 
 year_start = args.year_start
 year_end = args.year_end
 eventdetrend = args.eventdetrend.lower() == 'true'
 meandata = True
-
-print(eventdetrend)
-
-
-datalabel = 'Alldata'
-data = getExcelData()
+datalabel = args.datalabel          # was: datalabel = 'Alldata'
+data = getExcelData(datalabel)
+data = calcD14C(data)
+data = getExcelData(datalabel)
 data = calcD14C(data)
 
 if eventdetrend:
