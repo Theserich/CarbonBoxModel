@@ -48,7 +48,7 @@ def gaussfunc(t, amp, times, width=0.15):
 
 prepostyears = 15
 
-data = loadexcel(projectPath/ Path('Data\\C14Records\\ETHALL2026-04-16.xlsx'))
+data = loadexcel(projectPath/ Path('Data\\DBsave\\ETHALL2026-04-16.xlsx'))
 
 
 idx = np.where((data['bp']>=1950-t1)&(data['bp']<=1950-t0))[0]

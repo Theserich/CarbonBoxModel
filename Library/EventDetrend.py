@@ -29,23 +29,23 @@ def sliceData(df,t0,t1,bp=False):
         retdf[key] = retdf[key][idx]
     return retdf
 
-@cache_results(file_format='pickle', cache_dir='eventdetrend')
-def eventdetrenddataframe(df,plotfit=False):
+@cache_results(file_format='pickle', cache_dir='eventdetrend',recalc=False)
+def eventdetrenddataframe(df,plotfit=False,allevents=False):
     dt = 0.1
     totprod = 6.6e-12
-    data = loadexcel(projectPath / Path('Data/C14Records/Alldata2026-06-18.xlsx'))
-    data = calcD14C(data)
+    label = 'Alldata'
+    data = getExcelData(label)
     retdf = calcD14C(df)
-    eventdatadict = {'7175 BCE': {'data': sliceData(data,t0=1950+7175-15, t1=1950+7175+15,bp=True)},
-                     '5258 BCE': {'data': sliceData(data,t0=1950 + 5258 - 15, t1=1950 + 5258 + 15,bp=True)},
-                     '3480 BP': {'data': sliceData(data,3469, 3487, bp=True)},
-                     '664 BCE': {'data': sliceData(data,-664 - 15, -664 + 15, bp=False)},
-                     '775': {'data': sliceData(data,775-15,775+15,bp=False)},
-                     '840': {'data': sliceData(data,840 - 15, 840 + 15)},
-                     '955': {'data': sliceData(data,955 - 15, 955 + 15)},
-                     '993': {'data': sliceData(data,993 - 15, 995 + 15, bp=False)},
-                     '1052': {'data': sliceData(data,1052 - 15, 1052 + 15, bp=False)},
-                     '1750': {'data': sliceData(data,1750 - 15, 1750 + 15, bp=False)},
+    eventdatadict = {'7175 BCE': {'data': sliceData(data, t0=1950 + 7175 - 15, t1=1950 + 7175 + 15, bp=True)},
+                     '5258 BCE': {'data': sliceData(data, t0=1950 + 5258 - 15, t1=1950 + 5258 + 15, bp=True)},
+                     '3480 BP': {'data': sliceData(data, 3469, 3487, bp=True)},
+                     '664 BCE': {'data': sliceData(data, -664 - 15, -664 + 15, bp=False)},
+                     '775': {'data': sliceData(data, 775 - 15, 775 + 15, bp=False)},
+                     '840': {'data': sliceData(data, 840 - 15, 840 + 15)},
+                     '955': {'data': sliceData(data, 955 - 15, 955 + 15)},
+                     '993': {'data': sliceData(data, 993 - 15, 995 + 15, bp=False)},
+                     '1052': {'data': sliceData(data, 1052 - 15, 1052 + 15, bp=False)},
+                     '1750': {'data': sliceData(data, 1750 - 15, 1750 + 15, bp=False)},
                      }
     diffs = []
     diff_stds = []
@@ -65,14 +65,16 @@ def eventdetrenddataframe(df,plotfit=False):
         simtimes,prodcution,simdeltas,simdeltasnoevent, samples,weights,theta_map = MCMCSpikeDetrenderCycle(eventdf,eventyear=None,N=2000,burnin=1000)
         samplesnoevent = samples.copy()
         samplesnoevent[:,0] = np.zeros_like(samplesnoevent[:,0])
-        times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years, samples,
-                                                          intcal=True, thin=100,bonusyears=1000)
-        times_noevent, allsimprods_noevents, allsimdeltas_noevents = getsimulations(delta, deltasigm, years, samplesnoevent,
-                                                          intcal=True, thin=100,bonusyears=1000)
+        times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years, samples, intcal=True, thin=100,
+                                                          bonusyears=100)
+        times_noevent, allsimprods_noevents, allsimdeltas_noevents = getsimulations(delta, deltasigm, years,
+                                                                                    samplesnoevent, intcal=True,
+                                                                                    thin=100, bonusyears=100)
         diffstd = interp1d(times_noevent,np.std(allsimdeltas - allsimdeltas_noevents,axis=0),fill_value=0, bounds_error=False)
         diff_stds.append(diffstd)
         diff = interp1d(simtimes, simdeltas- simdeltasnoevent,fill_value=0, bounds_error=False)
         diffs.append(diff)
+
         if plotfit:
             alldelta, alldeltasigm, allyears = eventdf['delta'], eventdf['delta_sig'], eventdf['year']
             deltasigm_corr = np.sqrt(deltasigm ** 2 + diffstd(years) ** 2)
@@ -166,6 +168,13 @@ def eventdetrenddataframe(df,plotfit=False):
             #    ax[0].plot(convertCalendarToBCE(times), simdelta, color='C1', lw=1, alpha=0.05, zorder=-10)
             ax[1].set_ylabel(r'$^{14}$C production rate (kg/year)')
             ax[0].set_ylabel(r'$\Delta^{14}$C (‰)')
+
+            # --- Corrected posterior panel layout ---
+            # The main panel occupies (1 - posterior_width) of both dimensions.
+            # posterior_right_gap:  horizontal space between the right posterior and the
+            #                       y-axis label of the NEXT panel (prevents overlap).
+            # posterior_top_gap:    vertical space between the top posterior and the top
+            #                       edge of the main axes (prevents overlap with tick labels).
             left = 0.2
             bottom = 0.1
             height = 0.12
@@ -239,7 +248,7 @@ def eventdetrenddataframe(df,plotfit=False):
             ax[0].fill_between(convertCalendarToBCE(simtimes[:-10000]), simdeltasnoevent[:-10000]-diffstd(simtimes[:-10000]), simdeltasnoevent[:-10000]+diffstd(simtimes[:-10000]), color='C1', alpha=0.2, lw=0, label='Detrending uncertainty')
             ax[0].legend(loc='upper left')
             xlim = ax[0].get_xlim()
-            intcaldf = loadexcel(projectPath/Path('Data/IntCal/Intcal20.xlsx'))
+            intcaldf = loadexcel(projectPath + 'Data/IntCal/Intcal20.xlsx')
             intCalcurveidx = np.where((intcaldf['bp'] > 1950 - min(years) - 50) & (intcaldf['bp'] < 1950 - max(years) + 50))[0]
             for key in intcaldf.keys():
                 intcaldf[key] = intcaldf[key][intCalcurveidx]
@@ -266,7 +275,10 @@ def eventdetrenddataframe(df,plotfit=False):
             ax[1].set_ylim(ymin - 0.09 * yrange, ymax)
             ymin, ymax = ax[1].get_ylim()
             ax[1].text(min(years) - 2, Baseline - 1.2 * amp * 1e12, formulastring, fontsize=fontsize, va='top')
-            plt.savefig(Path(r'Graphs\EventDetrendtest')/f'EventDetrend{event}.png', bbox_inches='tight')
+            if allevents:
+                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\Eventdetrendall')/f'EventDetrend{event}.png', bbox_inches='tight')
+            else:
+                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\EventDetrendtest')/f'EventDetrend{event}.png', bbox_inches='tight')
     for i, diff in enumerate(diffs):
         retdf['d14C'] = retdf['d14C'] - diff(1950-df['bp'])
         #retdf['d14C_sig'] = (retdf['d14C_sig']**2 + diff_stds[i](1950-df['bp'])**2)**0.5

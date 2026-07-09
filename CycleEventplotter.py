@@ -17,7 +17,7 @@ def gaussfunc(t, amp, times, width=0.15):
 eventdetrend = False
 allyears = np.arange(0,50,dtype=int)
 
-data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
+data = loadexcel(projectPath/ Path(f'Data/DBsave/{datalabel}.xlsx'))
 if eventdetrend:
     data = eventdetrenddataframe(data, plotfit=False)
 data = calcD14C(data)

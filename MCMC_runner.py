@@ -34,20 +34,8 @@ meandata = True
 print(eventdetrend)
 
 
-
-label = 'Alldata'
-data_dir = projectPath / Path('Data/C14Records/')
-files = list(data_dir.glob(f'{label}*.xlsx'))
-
-def extract_date(f):
-    match = re.search(r'(\d{4}-\d{2}-\d{2})', f.name)
-    return match.group(1) if match else ''
-
-latest_file = max(files, key=extract_date)
-datalabel = latest_file.stem  # e.g. 'Alldata2026-07-08'
-
-print(f"Using data file: {datalabel}", flush=True)
-data = loadexcel(latest_file)
+datalabel = 'Alldata'
+data = getExcelData()
 data = calcD14C(data)
 
 if eventdetrend:

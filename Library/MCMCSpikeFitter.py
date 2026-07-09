@@ -27,7 +27,6 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
     allweights = []
     alltimes = []
     for year in range(int(t00),int(t11)):
-        print(year)
         t0 = year-preposttime
         t1 = year+preposttime
         idx = np.where((data['bp']>=1950-t1)&(data['bp']<=1950-t0))[0]
@@ -38,9 +37,6 @@ def eventfinder(t00,t11,data,logprior,preposttime=15):
             continue
         alltimes.append(year)
         [delta, deltasigm, years] = getDeltafromDataframe(df)
-        print(delta)
-        print(deltasigm)
-        print(years)
         simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
         theta_map_phys = theta_map.copy()
         theta_map_phys[0] = np.sum(
@@ -125,9 +121,9 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 
 
 @cache_results_Cluster(cache_dir="CycleSpikesearchCacheprior",
-    label_fn=lambda delta, deltasigm, years,logprior, **kw: int(np.mean(years)),float_decimals=4
+    label_fn=lambda delta, deltasigm, years,logprior, **kw: int(np.mean(years)),float_decimals=2
 )
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=10, dt=0.1, totprod=6.6e-12, N=3000, burnin=1000, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=10, dt=0.1, totprod=6.6e-12, N=20, burnin=10, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)

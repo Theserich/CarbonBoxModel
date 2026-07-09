@@ -5,7 +5,7 @@ from scipy.signal import find_peaks
 from Library.EventDetrend import eventdetrenddataframe
 eventdetrend = False
 preposttime = 15
-t0,t1  = 1000, 2000
+t0,t1  = -4000, 2000
 
 
 
@@ -19,7 +19,7 @@ eventdetrend = False
 threshold = 3
 
 
-dataframe = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
+dataframe = getExcelData('Alldata')
 colors = itertools.cycle([f'C{i}' for i in range(10)])
 setPlotParams(14,figsize=(16, 16))
 
