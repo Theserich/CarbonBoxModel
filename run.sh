@@ -23,4 +23,4 @@ YEAR_START=$((TOTAL_START + SLURM_ARRAY_TASK_ID * CHUNK))
 YEAR_END=$((YEAR_START + CHUNK))
 
 echo "Job $SLURM_ARRAY_TASK_ID: years $YEAR_START to $YEAR_END, datalabel=$DATALABEL"
-python MCMC_runner.py --year_start $YEAR_START --yscancel ear_end $YEAR_END --eventdetrend False --datalabel $DATALABEL
+python MCMC_runner.py --year_start $YEAR_START --year_end $YEAR_END --eventdetrend False --datalabel $DATALABEL
