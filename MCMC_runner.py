@@ -47,7 +47,6 @@ for year in range(int(year_start), int(year_end)):
     print(year)
     dt = 0.1
     totprod = 6.6e-12
-
     prepostyears = 15
 
 
