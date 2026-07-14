@@ -123,13 +123,12 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 @cache_results_Cluster(
     cache_dir="CycleSpikesearchCacheprior",
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
-    key_fn=lambda delta, deltasigm, years, logprior, eventyear=None, prepost=10,
-                  dt=0.1, totprod=6.6e-12, N=20, burnin=10, thin=1, intcal=True, **kw:
-        (int(np.mean(years)), int(np.min(years)), int(np.max(years)),
-         eventyear, prepost, dt, totprod, N, burnin, thin, intcal),
+    key_fn=lambda delta, deltasigm, years, logprior,
+                  dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True, **kw:
+        (int(np.mean(years)), int(np.min(years)), int(np.max(years)), dt, totprod, N, burnin, thin, intcal),
     float_decimals=2
 )
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,prepost=0, dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1,intcal=True):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
@@ -138,18 +137,12 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior,eventyear=None,pr
     else:
         box0 = copy.deepcopy(Sim.getstartState(startdelta, 12, preTime=10))
     fixsimtimes = np.arange(min(years) - 5, max(years) + 5, dt)
-    if eventyear is None:
-        maxyear = max(years)-prepost
-        minyear = min(years)+prepost
-        yearstep = (max(years) - min(years)) / 3
-        diffs = np.diff(delta)
-        spikeyear = years[np.argmax(diffs)]
-        initial_parameters = np.array([totprod, 0, spikeyear,np.pi,2e-12,11,startdelta])
-    else:
-        minyear = eventyear - 0.45
-        maxyear = eventyear + 0.45
-        yearstep = 0.2
-        initial_parameters = np.array([totprod, 0, eventyear,np.pi,2e-12,11,startdelta])
+    maxyear = max(years)+1
+    minyear = min(years)-1
+    yearstep = (max(years) - min(years)) / 20
+    diffs = np.diff(delta)
+    spikeyear = years[np.argmax(diffs)]
+    initial_parameters = np.array([totprod, 0, spikeyear,np.pi,2e-12,11,startdelta])
 
     def gausseventfunc(t, amp, times, width=0.15):
         return np.exp(-0.5 * (t - times) ** 2 / width ** 2) * amp
