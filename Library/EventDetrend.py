@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from Library.MCMCFunctions import *
 from Library.BoxModel import *
 from Library.plotfunctions import *
-from Library.MCMCSpikeFitter import MCMCSpikeDetrenderCycle, getsimulations
+from Library.MCMCSpikeFitter import MCMCSpikeDetrenderCycle, getsimulations, circular_std,circular_mean
 
 
 def gaussfunc(t, amp, times, width=0.15):
@@ -30,15 +30,16 @@ def sliceData(df,t0,t1,bp=False):
     return retdf
 
 @cache_results(file_format='pickle', cache_dir='eventdetrend',recalc=False)
-def eventdetrenddataframe(df,plotfit=False,allevents=False):
+def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
     dt = 0.1
     totprod = 6.6e-12
     label = 'Alldata'
-    data = getExcelData(label)
+    data = calcD14C(getExcelData(label))
+
     retdf = calcD14C(df)
     eventdatadict = {'7175 BCE': {'data': sliceData(data, t0=1950 + 7175 - 15, t1=1950 + 7175 + 15, bp=True)},
                      '5258 BCE': {'data': sliceData(data, t0=1950 + 5258 - 15, t1=1950 + 5258 + 15, bp=True)},
-                     '3480 BP': {'data': sliceData(data, 3469, 3487, bp=True)},
+                     '3480 BP': {'data': sliceData(data, -1532-15, -1532+15, bp=False)},
                      '664 BCE': {'data': sliceData(data, -664 - 15, -664 + 15, bp=False)},
                      '775': {'data': sliceData(data, 775 - 15, 775 + 15, bp=False)},
                      '840': {'data': sliceData(data, 840 - 15, 840 + 15)},
@@ -62,14 +63,16 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
         eventdf['age_sig'] = 8033 / eventdf['fm'] * eventdf['fm_sig']
 
         [delta, deltasigm, years] = getDeltafromDataframe(eventdf)
-        simtimes,prodcution,simdeltas,simdeltasnoevent, samples,weights,theta_map = MCMCSpikeDetrenderCycle(eventdf,eventyear=None,N=2000,burnin=1000)
+        simtimes,prodcution,simdeltas,simdeltasnoevent, samples,weights,theta_map = MCMCSpikeDetrenderCycle(eventdf,eventyear=None,N=2000,burnin=1000,bonusyears=bonusyears)
         samplesnoevent = samples.copy()
+        theta_mapnoevent = theta_map.copy()
         samplesnoevent[:,0] = np.zeros_like(samplesnoevent[:,0])
+        theta_mapnoevent[0] = 0
         times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years, samples, intcal=True, thin=100,
-                                                          bonusyears=100)
+                                                          bonusyears=bonusyears)
         times_noevent, allsimprods_noevents, allsimdeltas_noevents = getsimulations(delta, deltasigm, years,
                                                                                     samplesnoevent, intcal=True,
-                                                                                    thin=100, bonusyears=100)
+                                                                                    thin=100, bonusyears=bonusyears)
         diffstd = interp1d(times_noevent,np.std(allsimdeltas - allsimdeltas_noevents,axis=0),fill_value=0, bounds_error=False)
         diff_stds.append(diffstd)
         diff = interp1d(simtimes, simdeltas- simdeltasnoevent,fill_value=0, bounds_error=False)
@@ -79,6 +82,7 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
             alldelta, alldeltasigm, allyears = eventdf['delta'], eventdf['delta_sig'], eventdf['year']
             deltasigm_corr = np.sqrt(deltasigm ** 2 + diffstd(years) ** 2)
             corrdelta = delta - diff(years)
+
             theta_map_phys = theta_map.copy()
             theta_map_phys[0] = np.sum(
                 gaussfunc(theta_map[2], theta_map[0], simtimes, width=0.15) * dt
@@ -95,15 +99,16 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
                     gaussfunc(theta_map[2], sample, simtimes, width=0.15) * dt
                 )
             samples_phys[:, 1] = samples_phys[:, 1] * 1e12 + totprod * 1e12
-            samples_phys[:, 3] = (samples_phys[:, 3] + (2 * np.pi / samples_phys[:, 5]) * samples_phys[:, 2]) % (
-                        2 * np.pi)
+            # Extract raw phase in radians and add the time shift component
+            raw_phase_rad = samples_phys[:, 3] + (2 * np.pi / samples_phys[:, 5]) * samples_phys[:, 2]
+            samples_phys[:, 3] = ((3 * np.pi / 2 + raw_phase_rad) / (2 * np.pi)) % 1.0
             samples_phys[:, 4] = samples_phys[:, 4] * 1e12
             samples_phys[:, 5] = samples_phys[:, 5]
 
             params_settings = {0: {'name': 'Event production\n(kg)', 'binsize': 0.2, 'limits': (0, 10.5)},
                                1: {'name': 'Baseline\n(kg/yr)', 'binsize': 0.01, 'limits': (4, 8)},
                                2: {'name': 'Event year', 'binsize': 0.1, 'limits': (min(years), max(years))},
-                               3: {'name': 'Event phase', 'binsize': 0.3, 'limits': (0, np.pi * 2)},
+                               3: {'name': 'Solar cycle phase', 'binsize': 0.05, 'limits': (0, 1)},
                                4: {'name': 'Cycle amp\n(kg/yr)', 'binsize': 0.05, 'limits': (0, 1.4)},
                                5: {'name': 'Cycle period\n(yrs)', 'binsize': 0.3, 'limits': (5, 43)},
                                }
@@ -128,17 +133,10 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
 
             pairs = [(0, 1), (2, 0), (4, 5), (3, 5)]
 
-            def get_stats(samples, weights):
-                # Weighted mean (Peak/Centroid)
-                mean = np.average(samples)
-                # Weighted variance
-                var = np.average((samples - mean) ** 2)
-                return mean, np.sqrt(var)
-
-            # Calculate stats for each physical parameter directly
             stats = {}
             for i in range(6):
-                stats[i] = get_stats(samples_phys[:, i], weights)
+                stats = {j: [np.mean(samples_phys[:, j]), np.std(samples_phys[:, j])] for j in range(6)}
+            stats[3] = [circular_mean(samples_phys[:, 3]), circular_std(samples_phys[:, 3])]
 
             # Map them to your variables
             Excess, Excess_sig = stats[0]
@@ -156,25 +154,12 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
             setPlotParams(fontsize, figsize=figsize)
             colors = itertools.cycle([f'C{i}' for i in range(10)])
             fig, ax, ax0 = subplots(2)
-            #ax[1].plot(convertCalendarToBCE(simtimes), (prodcution + totprod) * 1e12, color='C3', lw=2, zorder=-10)
-
             for simprod, simdelta in zip(allsimprods, allsimdeltas):
-                ax[1].plot(convertCalendarToBCE(times), (simprod + totprod) * 1e12, color='C3', lw=1, alpha=0.05,
+                ax[1].plot(convertCalendarToBCE(times[:-(bonusyears-50)*10]), (simprod[:-(bonusyears-50)*10] + totprod) * 1e12, color='C3', lw=1, alpha=0.05,
                            zorder=-10)
-                ax[0].plot(convertCalendarToBCE(times), simdelta, color='C0', lw=1, alpha=0.05, zorder=-10)
-            #for simprod, simdelta in zip(allsimprods_noevents, allsimdeltas_noevents):
-            #    ax[1].plot(convertCalendarToBCE(times), (simprod + totprod) * 1e12, color='C1', lw=1, alpha=0.05,
-            #               zorder=-10)
-            #    ax[0].plot(convertCalendarToBCE(times), simdelta, color='C1', lw=1, alpha=0.05, zorder=-10)
+                ax[0].plot(convertCalendarToBCE(times[:-(bonusyears)-50*10]), simdelta[:-(bonusyears-50)*10], color='C0', lw=1, alpha=0.05, zorder=-10)
             ax[1].set_ylabel(r'$^{14}$C production rate (kg/year)')
             ax[0].set_ylabel(r'$\Delta^{14}$C (‰)')
-
-            # --- Corrected posterior panel layout ---
-            # The main panel occupies (1 - posterior_width) of both dimensions.
-            # posterior_right_gap:  horizontal space between the right posterior and the
-            #                       y-axis label of the NEXT panel (prevents overlap).
-            # posterior_top_gap:    vertical space between the top posterior and the top
-            #                       edge of the main axes (prevents overlap with tick labels).
             left = 0.2
             bottom = 0.1
             height = 0.12
@@ -183,8 +168,6 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
             posterior_top_gap = 0.005  # extra gap so top posterior does not overlap x tick labels
 
             width = height / figsize[0] * figsize[1]
-
-            # Sizes of sub-axes expressed as figure fractions
             main_w = width * (1 - posterior_width)
             main_h = height * (1 - posterior_width)
             post_w = width * posterior_width  # right marginal width
@@ -193,8 +176,6 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
             main_box = [left, bottom, main_w, main_h]
             top_box = [left, bottom + main_h + posterior_top_gap, main_w, post_h]
             right_box = [left + main_w, bottom, post_w, main_h]
-
-            # Step between panels: main + right posterior + gap before next panel's y-label
             panel_step = width + posterior_right_gap
 
             axs = []
@@ -243,9 +224,9 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
                            color='C2', zorder=10)
             ax[0].errorbar(convertCalendarToBCE(allyears), alldelta, yerr=alldeltasigm, fmt='s', capsize=3,
                            label='Data', color='grey', zorder=-2, alpha=0.2)
-            ax[0].plot(convertCalendarToBCE(simtimes[:-10000]), simdeltas[:-10000])
-            ax[0].plot(convertCalendarToBCE(simtimes[:-10000]), simdeltasnoevent[:-10000])
-            ax[0].fill_between(convertCalendarToBCE(simtimes[:-10000]), simdeltasnoevent[:-10000]-diffstd(simtimes[:-10000]), simdeltasnoevent[:-10000]+diffstd(simtimes[:-10000]), color='C1', alpha=0.2, lw=0, label='Detrending uncertainty')
+            ax[0].plot(convertCalendarToBCE(simtimes[:-bonusyears*10]), simdeltas[:-bonusyears*10])
+            ax[0].plot(convertCalendarToBCE(simtimes[:-bonusyears*10]), simdeltasnoevent[:-bonusyears*10])
+            ax[0].fill_between(convertCalendarToBCE(simtimes[:-bonusyears*10]), simdeltasnoevent[:-bonusyears*10]-diffstd(simtimes[:-bonusyears*10]), simdeltasnoevent[:-bonusyears*10]+diffstd(simtimes[:-bonusyears*10]), color='C1', alpha=0.2, lw=0, label='Detrending uncertainty')
             ax[0].legend(loc='upper left')
             xlim = ax[0].get_xlim()
             intcaldf = loadexcel(projectPath + 'Data/IntCal/Intcal20.xlsx')
@@ -287,5 +268,4 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False):
     retdf['age'] = -8033*np.log(retdf['fm'])
     retdf['age_sig'] = 8033/retdf['fm']*retdf['fm_sig']
     return retdf
-
 

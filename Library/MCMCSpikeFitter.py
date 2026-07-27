@@ -18,6 +18,26 @@ def get_stats(samples):
     var = np.average((samples - mean)**2)
     return mean, np.sqrt(var)
 
+def circular_mean(phases_frac):
+    # Convert [0, 1] fraction to [0, 2π] radians
+    phases_rad = phases_frac * 2 * np.pi
+
+    mean_angle = np.arctan2(np.mean(np.sin(phases_rad)), np.mean(np.cos(phases_rad)))
+    mean_angle = mean_angle % (2 * np.pi)  # map back to [0, 2π]
+
+    # Convert back to [0, 1] fraction
+    return mean_angle / (2 * np.pi)
+
+def circular_std(phases_frac):
+    # Convert [0, 1] fraction to [0, 2π] radians
+    phases_rad = phases_frac * 2 * np.pi
+
+    R = np.sqrt(np.mean(np.sin(phases_rad)) ** 2 + np.mean(np.cos(phases_rad)) ** 2)
+    std_rad = np.sqrt(-2 * np.log(np.clip(R, 1e-10, 1)))  # result in radians
+
+    # Convert back to [0, 1] fraction
+    return std_rad / (2 * np.pi)
+
 
 def gaussfunc(t, amp, times, width=0.15):
     return np.exp(-1 / 2 * (t - times) ** 2 / width ** 2) * amp*1e12
@@ -238,7 +258,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, dt=0.1, totprod=
 
 
 @cache_results2(file_format='npz', recalc=False, cache_dir="SpikedetrenderCycleCache")
-def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True):
+def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True,bonusyears=0):
     [delta, deltasigm, years] = getDeltafromDataframe(df)
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
@@ -348,20 +368,20 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
                  fill_value=thetabest[1], kind='linear',
                  bounds_error=False)]]
     Sim.eventproduction = [[interp1d(np.arange(0,2),np.zeros(2),fill_value=0,bounds_error=False)]]
-    Sim.simulate(min(years) - 1, max(years)+1000)
+    Sim.simulate(min(years) - 1, max(years)+bonusyears)
     times2, p2, deltasnoevent = Sim.getSimulationResults()
 
     Sim.eventproduction = [
         [interp1d(fixsimtimes, gausseventfunc(thetabest[2], thetabest[0], fixsimtimes), fill_value=0, kind='linear',
                   bounds_error=False)]]
-    Sim.simulate(min(years) - 1, max(years)+1000)
+    Sim.simulate(min(years) - 1, max(years)+bonusyears)
     times, p, deltas = Sim.getSimulationResults()
     weights = emcee_weights(sampler, burnin=burnin, thin=thin)
     return Sim.times, p[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times), deltas[12],deltasnoevent[12], samples, weights, theta_map
 
 
-@cache_results2(file_format='npz',recalc=False, cache_dir="getsimulationsCache")
-def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=6.6e-12,thin=1,bonusyears=0):
+@cache_results2(file_format='pickle',cache_dir="getSimulationsCache")
+def getsimulations(delta, deltasigm, years, samples, intcal=False, dt=0.1, totprod=6.6e-12, thin=1, bonusyears=0):
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
     if intcal:
@@ -371,8 +391,10 @@ def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=
     fixsimtimes = np.arange(min(years) - 5, max(years) + 5+bonusyears, dt)
     def gausseventfunc(t, amp, times, width=0.15):
         return np.exp(-0.5 * (t - times) ** 2 / width ** 2) * amp
+
     def baseeventfunc(baseline, times, phase, amp, period):
         return np.ones(len(times)) * baseline + amp * np.sin(2 * np.pi * times / period + phase)
+
     if len(samples) == 0:
         empty_2d = np.empty((0, len(fixsimtimes)))
         return fixsimtimes, empty_2d, empty_2d
@@ -381,6 +403,7 @@ def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=
     Sim.box0 = box0
     Sim.production = []
     Sim.eventproduction = []
+    #Sim.box0 = Sim.getstartState(delta0, 12, preTime=3)
     Sim.production = [
         [interp1d(fixsimtimes, baseeventfunc(baseline, fixsimtimes, phase, amp, period), fill_value=baseline,
                   bounds_error=False, kind='linear')]]
@@ -388,7 +411,9 @@ def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=
         [interp1d(fixsimtimes, gausseventfunc(t, eventamp, fixsimtimes), fill_value=0, bounds_error=False,
                   kind='linear')]]
     Sim.box0 = Sim.getstartState(delta0, 12, preTime=3)
-    Sim.simulate(min(years) - 1, max(years))
+    Sim.simulate(min(years) - 1, max(years)+bonusyears)
+    times, p, deltas = Sim.getSimulationResults()
+
     n_samples = len(samples[::thin])
     simtimes, prod, deltas = Sim.getSimulationResults()
     n_times = len(Sim.times)
@@ -401,6 +426,7 @@ def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=
         Sim.box0 = box0
         Sim.production = []
         Sim.eventproduction = []
+
         Sim.production = [
             [interp1d(fixsimtimes, baseeventfunc(baseline, fixsimtimes, phase, amp, period), fill_value=baseline,
                       bounds_error=False, kind='linear')]]
@@ -408,11 +434,10 @@ def getsimulations(delta, deltasigm, years,samples, intcal=True,dt=0.1, totprod=
             [interp1d(fixsimtimes, gausseventfunc(t, eventamp, fixsimtimes), fill_value=0, bounds_error=False,
                       kind='linear')]]
         Sim.box0 = Sim.getstartState(delta0, 12, preTime=3)
-        Sim.simulate(min(years) - 1, max(years))
+        Sim.simulate(min(years) - 1, max(years)+bonusyears)
         simtimes, prod, deltas = Sim.getSimulationResults()
         alldeltas[i] = deltas[12]
         allprods[i] = prod[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times)
     return Sim.times, allprods, alldeltas
-
 
 
