@@ -350,8 +350,8 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
         0.2,  # period
         sig0  # delta0sig
     ])
-    rng = np.random.default_rng(42)  # pick any fixed seed
-    pos = initial_parameters + step_sizes * rng.standard_normal((nwalkers, ndim))
+    np.random.seed(42)  # fixes the global legacy RNG
+    pos = initial_parameters + step_sizes * np.random.randn(nwalkers, ndim)
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, log_posterior,
         moves=[
@@ -359,7 +359,6 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
             (emcee.moves.DESnookerMove(), 0.2),
         ]
     )
-    # sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior)
     sampler.run_mcmc(pos, N, progress=True)
     samples = sampler.get_chain(discard=burnin, thin=thin, flat=True)
     log_prob = sampler.get_log_prob(discard=burnin, thin=thin, flat=True)

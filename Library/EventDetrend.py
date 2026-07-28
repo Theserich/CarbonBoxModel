@@ -64,7 +64,7 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
         eventdf['age_sig'] = 8033 / eventdf['fm'] * eventdf['fm_sig']
 
         [delta, deltasigm, years] = getDeltafromDataframe(eventdf)
-        simtimes,prodcution,simdeltas,simdeltasnoevent, samples,weights,theta_map = MCMCSpikeDetrenderCycle(eventdf,eventyear=None,N=2000,burnin=1000,bonusyears=bonusyears)
+        simtimes,prodcution,simdeltas,simdeltasnoevent, samples,weights,theta_map = MCMCSpikeDetrenderCycle(eventdf,eventyear=None,N=10,burnin=5,bonusyears=bonusyears)
         samplesnoevent = samples.copy()
         theta_mapnoevent = theta_map.copy()
         samplesnoevent[:,0] = np.zeros_like(samplesnoevent[:,0])
