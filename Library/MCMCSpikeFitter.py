@@ -147,7 +147,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
                   dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True, **kw:
         (
             int(np.mean(years)), int(np.min(years)), int(np.max(years)),
-            tuple(np.round(delta, 2)), tuple(np.round(deltasigm, 2)),
+            tuple(round(float(x), 2) for x in delta), tuple(round(float(x), 2) for x in deltasigm),
             _hash_func_ast(logprior),
             dt, totprod, N, burnin, thin, intcal
         ),
