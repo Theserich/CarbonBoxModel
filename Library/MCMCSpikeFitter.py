@@ -350,7 +350,8 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
         0.2,  # period
         sig0  # delta0sig
     ])
-    pos = initial_parameters + step_sizes * np.random.randn(nwalkers, ndim)
+    rng = np.random.default_rng(42)  # pick any fixed seed
+    pos = initial_parameters + step_sizes * rng.standard_normal((nwalkers, ndim))
     sampler = emcee.EnsembleSampler(
         nwalkers, ndim, log_posterior,
         moves=[

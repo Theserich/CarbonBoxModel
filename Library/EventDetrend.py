@@ -38,16 +38,16 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
     data = calcD14C(getExcelData(label))
 
     retdf = calcD14C(df)
-    eventdatadict = {'7175 BCE': {'data': sliceData(data, t0=1950 + 7175 - 15, t1=1950 + 7175 + 15, bp=True)},
-                     '5258 BCE': {'data': sliceData(data, t0=1950 + 5258 - 15, t1=1950 + 5258 + 15, bp=True)},
-                     '3480 BP': {'data': sliceData(data, -1532-15, -1532+15, bp=False)},
-                     '664 BCE': {'data': sliceData(data, -664 - 15, -664 + 15, bp=False)},
+    eventdatadict = {#'7175 BCE': {'data': sliceData(data, t0=1950 + 7175 - 15, t1=1950 + 7175 + 15, bp=True)},
+                     #'5258 BCE': {'data': sliceData(data, t0=1950 + 5258 - 15, t1=1950 + 5258 + 15, bp=True)},
+                     #'3480 BP': {'data': sliceData(data, -1532-15, -1532+15, bp=False)},
+                     #'664 BCE': {'data': sliceData(data, -664 - 15, -664 + 15, bp=False)},
                      '775': {'data': sliceData(data, 775 - 15, 775 + 15, bp=False)},
-                     '840': {'data': sliceData(data, 840 - 15, 840 + 15)},
-                     '955': {'data': sliceData(data, 955 - 15, 955 + 15)},
-                     '993': {'data': sliceData(data, 993 - 15, 995 + 15, bp=False)},
-                     '1052': {'data': sliceData(data, 1052 - 15, 1052 + 15, bp=False)},
-                     '1750': {'data': sliceData(data, 1750 - 15, 1750 + 15, bp=False)},
+                     #'840': {'data': sliceData(data, 840 - 15, 840 + 15)},
+                     #'955': {'data': sliceData(data, 955 - 15, 955 + 15)},
+                     #'993': {'data': sliceData(data, 993 - 15, 995 + 15, bp=False)},
+                     #'1052': {'data': sliceData(data, 1052 - 15, 1052 + 15, bp=False)},
+                     #'1750': {'data': sliceData(data, 1750 - 15, 1750 + 15, bp=False)},
                      }
     diffs = []
     diff_stds = []
