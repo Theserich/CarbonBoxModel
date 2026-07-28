@@ -22,19 +22,22 @@ logger.addHandler(handler)
 
 def _hash_func_ast(fn):
     """
-    AST-based structural hash of a function's source, insensitive to
-    whitespace, indentation style, comments, and blank lines. Falls back
-    to repr(fn) if the source can't be retrieved or parsed (e.g. built-ins).
+    Structural hash of a function's source, insensitive to whitespace,
+    indentation style, comments, and blank lines -- but based on
+    normalized source text rather than ast.dump(), since ast.dump()'s
+    output format is NOT guaranteed stable across Python versions
+    (node shapes changed across 3.8/3.9/3.12 etc.), which breaks
+    cross-machine cache reuse even when the function logic is identical.
     """
     try:
         src = inspect.getsource(fn)
     except (OSError, TypeError):
         return repr(fn)
-    try:
-        tree = ast.parse(textwrap.dedent(src))
-        return ast.dump(tree, annotate_fields=False, include_attributes=False)
-    except SyntaxError:
-        return repr(fn)
+    src = src.replace('\r\n', '\n').replace('\r', '\n')
+    src = textwrap.dedent(src)
+    lines = [line.rstrip() for line in src.split('\n')]
+    lines = [line for line in lines if line.strip() != '' and not line.strip().startswith('#')]
+    return '\n'.join(lines)
 
 def cache_results_Cluster(cache_dir="cache", recalc=False,
                            print_debug=True, label_fn=None, key_fn=None,
