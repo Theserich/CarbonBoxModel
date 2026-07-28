@@ -80,10 +80,9 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
         diffs.append(diff)
 
         if plotfit:
-            alldelta, alldeltasigm, allyears = eventdf['delta'], eventdf['delta_sig'], eventdf['year']
+            alldelta, alldeltasigm, allyears = eventdf['d14C'], eventdf['d14C_sig'], eventdf['year']
             deltasigm_corr = np.sqrt(deltasigm ** 2 + diffstd(years) ** 2)
             corrdelta = delta - diff(years)
-
             theta_map_phys = theta_map.copy()
             theta_map_phys[0] = np.sum(
                 gaussfunc(theta_map[2], theta_map[0], simtimes, width=0.15) * dt
@@ -156,9 +155,9 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
             colors = itertools.cycle([f'C{i}' for i in range(10)])
             fig, ax, ax0 = subplots(2)
             for simprod, simdelta in zip(allsimprods, allsimdeltas):
-                ax[1].plot(convertCalendarToBCE(times[:-(bonusyears-50)*10]), (simprod[:-(bonusyears-50)*10] + totprod) * 1e12, color='C3', lw=1, alpha=0.05,
+                ax[1].plot(convertCalendarToBCE(times[:-bonusyears*10]), (simprod[:-bonusyears*10] + totprod) * 1e12, color='C3', lw=1, alpha=0.05,
                            zorder=-10)
-                ax[0].plot(convertCalendarToBCE(times[:-(bonusyears)-50*10]), simdelta[:-(bonusyears-50)*10], color='C0', lw=1, alpha=0.05, zorder=-10)
+                ax[0].plot(convertCalendarToBCE(times[:-bonusyears*10]), simdelta[:-bonusyears*10], color='C0', lw=1, alpha=0.05, zorder=-10)
             ax[1].set_ylabel(r'$^{14}$C production rate (kg/year)')
             ax[0].set_ylabel(r'$\Delta^{14}$C (‰)')
             left = 0.2
@@ -269,4 +268,3 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
     retdf['age'] = -8033*np.log(retdf['fm'])
     retdf['age_sig'] = 8033/retdf['fm']*retdf['fm_sig']
     return retdf
-

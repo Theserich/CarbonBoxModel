@@ -1,7 +1,7 @@
 from Library.BoxModel import *
 from Library.MCMCFunctions import weighted_quantile
 import emcee
-from Library.cache_function import cache_results, cache_results2, cache_results_Cluster
+from Library.cache_function import cache_results, cache_results2, cache_results_Cluster, _hash_func_ast
 from Library.MCMCFunctions import emcee_weights, weighted_quantile
 from scipy.stats import norm
 import copy
@@ -145,7 +145,12 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
     key_fn=lambda delta, deltasigm, years, logprior,
                   dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True, **kw:
-        (int(np.mean(years)), int(np.min(years)), int(np.max(years)), dt, totprod, N, burnin, thin, intcal),
+        (
+            int(np.mean(years)), int(np.min(years)), int(np.max(years)),
+            tuple(np.round(delta, 2)), tuple(np.round(deltasigm, 2)),
+            _hash_func_ast(logprior),
+            dt, totprod, N, burnin, thin, intcal
+        ),
     float_decimals=2
 )
 def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1,intcal=True):

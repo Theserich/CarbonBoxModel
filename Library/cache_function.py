@@ -20,6 +20,22 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 
+def _hash_func_ast(fn):
+    """
+    AST-based structural hash of a function's source, insensitive to
+    whitespace, indentation style, comments, and blank lines. Falls back
+    to repr(fn) if the source can't be retrieved or parsed (e.g. built-ins).
+    """
+    try:
+        src = inspect.getsource(fn)
+    except (OSError, TypeError):
+        return repr(fn)
+    try:
+        tree = ast.parse(textwrap.dedent(src))
+        return ast.dump(tree, annotate_fields=False, include_attributes=False)
+    except SyntaxError:
+        return repr(fn)
+
 def cache_results_Cluster(cache_dir="cache", recalc=False,
                            print_debug=True, label_fn=None, key_fn=None,
                            float_decimals=4):
