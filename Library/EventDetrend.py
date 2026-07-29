@@ -259,7 +259,7 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
             if allevents:
                 plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\Eventdetrendall')/f'EventDetrend{event}.png', bbox_inches='tight')
             else:
-                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\EventDetrendtest')/f'EventDetrend{event}.png', bbox_inches='tight')
+                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\EventDetrendtest2')/f'EventDetrend{event}.png', bbox_inches='tight')
     for i, diff in enumerate(diffs):
         retdf['d14C'] = retdf['d14C'] - diff(1950-df['bp'])
         #retdf['d14C_sig'] = (retdf['d14C_sig']**2 + diff_stds[i](1950-df['bp'])**2)**0.5
