@@ -144,16 +144,23 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     cache_dir="CycleSpikesearchCacheprior",
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
     key_fn=lambda delta, deltasigm, years, logprior,
-                  dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True, **kw:
+                  dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True,
+                  raw_delta=None, raw_deltasigm=None, detrend=False, **kw:
         (
             int(np.mean(years)), int(np.min(years)), int(np.max(years)),
-            tuple(int(x) for x in delta), tuple(int(x) for x in deltasigm),
+            tuple(round(float(x), 2) for x in
+                  (raw_delta if raw_delta is not None else delta)),
+            tuple(round(float(x), 2) for x in
+                  (raw_deltasigm if raw_deltasigm is not None else deltasigm)),
+            bool(detrend),
             _hash_func_ast(logprior),
             dt, totprod, N, burnin, thin, intcal
         ),
-    float_decimals=0
+    float_decimals=2
 )
-def MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior, dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1,intcal=True):
+def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
+                               dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
+                               raw_delta=None, raw_deltasigm=None, detrend=False):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
