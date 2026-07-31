@@ -17,7 +17,7 @@ DATALABEL=${1:-Alldata}
 TOTAL_START=${2:--4000}    # NEW: year range now overridable, defaults match old behavior
 TOTAL_END=${3:-2000}       # NEW
 
-CHUNK=10
+CHUNK=15
 
 YEAR_START=$((TOTAL_START + SLURM_ARRAY_TASK_ID * CHUNK))
 YEAR_END=$((YEAR_START + CHUNK))
