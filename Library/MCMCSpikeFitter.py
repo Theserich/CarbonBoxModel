@@ -96,17 +96,10 @@ def logpriorcycle(theta):
     lp_time = 0.0
     lp_phase = 0.0
     lp_baseline = 0.0
-
-    if cycleamp < 0.2:
-        lp_amp = -np.inf
-    elif cycleamp <= 1.0:
-        lp_amp = 0.0
-    else:
-        lp_amp = expon.logpdf(cycleamp - 1.0, scale=1.0)  # decays for amp > 1
-
+    a = (0.2 - 1) / 1  # (lower - loc) / scale
+    lp_amp = truncnorm.logpdf(cycleamp, a=a, b=np.inf, loc=1, scale=1)
     lp_period = norm.logpdf(cycleperiod, loc=10.5, scale=2)
-    lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale=10 * totprod)
-
+    lp_eventamp = 0
     return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
 #@cache_results('pickle', cache_dir='yeardict')
