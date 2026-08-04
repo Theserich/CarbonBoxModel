@@ -3,7 +3,7 @@ from Library.MCMCFunctions import weighted_quantile
 import emcee
 from Library.cache_function import cache_results, cache_results2, cache_results_Cluster, _hash_func_ast
 from Library.MCMCFunctions import emcee_weights, weighted_quantile
-from scipy.stats import norm
+from scipy.stats import norm, expon,truncnorm
 import copy
 from scipy.stats import halfnorm
 
@@ -88,6 +88,25 @@ def logprior(theta):
     lp_amp = norm.logpdf(cycleamp, loc=1, scale=1)
     lp_period = norm.logpdf(cycleperiod, loc=10.5, scale=2)  # -np.log(period)
     lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale= 10 * totprod)
+    return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
+
+
+def logpriorcycle(theta):
+    eventamp, baseline, eventtime, cyclephase, cycleamp, cycleperiod, delta0 = theta
+    lp_time = 0.0
+    lp_phase = 0.0
+    lp_baseline = 0.0
+
+    if cycleamp < 0.2:
+        lp_amp = -np.inf
+    elif cycleamp <= 1.0:
+        lp_amp = 0.0
+    else:
+        lp_amp = expon.logpdf(cycleamp - 1.0, scale=1.0)  # decays for amp > 1
+
+    lp_period = norm.logpdf(cycleperiod, loc=10.5, scale=2)
+    lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale=10 * totprod)
+
     return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
 #@cache_results('pickle', cache_dir='yeardict')

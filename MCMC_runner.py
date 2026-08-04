@@ -22,6 +22,8 @@ import argparse
 from pathlib import Path
 import re
 
+logprior = logpriorcycle
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--year_start', type=float, required=True)
 parser.add_argument('--year_end', type=float, required=True)
