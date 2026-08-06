@@ -90,6 +90,16 @@ def logprior(theta):
     lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale= 10 * totprod)
     return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
+def logpriorcycle05(theta):
+    eventamp, baseline, eventtime, cyclephase, cycleamp, cycleperiod, delta0 = theta
+    lp_time = 0.0
+    lp_phase = 0.0
+    lp_baseline = 0.0
+    a = (0.05e-12 - 1e-12) / 1e-12 # (lower - loc) / scale
+    lp_amp = truncnorm.logpdf(cycleamp, a=a, b=np.inf, loc=1e-12, scale=1e-12)
+    lp_period = norm.logpdf(cycleperiod, loc=10.5, scale=2)
+    lp_eventamp = 0
+    return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
 def logpriorcycle(theta):
     eventamp, baseline, eventtime, cyclephase, cycleamp, cycleperiod, delta0 = theta
