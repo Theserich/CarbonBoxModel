@@ -112,6 +112,17 @@ def logpriorcycle(theta):
     lp_eventamp = 0
     return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
 
+def logpriorcycle1(theta):
+    eventamp, baseline, eventtime, cyclephase, cycleamp, cycleperiod, delta0 = theta
+    lp_time = 0.0
+    lp_phase = 0.0
+    lp_baseline = 0.0
+    a = (0.1e-12 - 1e-12) / 1e-12 # (lower - loc) / scale
+    lp_amp = truncnorm.logpdf(cycleamp, a=a, b=np.inf, loc=1e-12, scale=1e-12)
+    lp_period = norm.logpdf(cycleperiod, loc=10.5, scale=1)
+    lp_eventamp = 0
+    return lp_time + lp_phase + lp_baseline + lp_amp + lp_period + lp_eventamp
+
 #@cache_results('pickle', cache_dir='yeardict')
 def get_yeardict(t0, t1, data,logprior,threshold=3,overlap=5):
     allsamples, alltimes = eventfinder(t0, t1, data,logprior)
