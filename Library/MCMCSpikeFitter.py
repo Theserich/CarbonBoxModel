@@ -301,8 +301,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
 
 
 
-
-@cache_results2(file_format='npz', recalc=False, cache_dir="SpikedetrenderCycleCache")
+@cache_results(file_format='pickle', recalc=False, cache_dir="SpikedetrenderCycleCache")
 def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000, burnin=100, thin=1,intcal=True,bonusyears=0):
     [delta, deltasigm, years] = getDeltafromDataframe(df)
     sig0 = deltasigm[0]
@@ -367,7 +366,7 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
         lp_time = 0.0
         lp_phase = 0.0
         lp_baseline = 0.0
-        lp_amp = 0  # -np.log(amp)
+        lp_amp = norm.logpdf(amp, loc=1, scale=1)
         lp_period = norm.logpdf(period, loc=10.5, scale=2)  # -np.log(period)
         lp_eventamp = 0  # halfnorm.logpdf(eventamp, scale= 10 * totprod)
         lp_delta0 = norm.logpdf(delta0, loc=startdelta, scale=sig0)
@@ -399,6 +398,7 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
             (emcee.moves.DESnookerMove(), 0.2),
         ]
     )
+    # sampler = emcee.EnsembleSampler(nwalkers, ndim, log_posterior)
     sampler.run_mcmc(pos, N, progress=True)
     samples = sampler.get_chain(discard=burnin, thin=thin, flat=True)
     log_prob = sampler.get_log_prob(discard=burnin, thin=thin, flat=True)
@@ -423,7 +423,6 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
     times, p, deltas = Sim.getSimulationResults()
     weights = emcee_weights(sampler, burnin=burnin, thin=thin)
     return Sim.times, p[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times), deltas[12],deltasnoevent[12], samples, weights, theta_map
-
 
 @cache_results2(file_format='pickle',cache_dir="getSimulationsCache")
 def getsimulations(delta, deltasigm, years, samples, intcal=False, dt=0.1, totprod=6.6e-12, thin=1, bonusyears=0):

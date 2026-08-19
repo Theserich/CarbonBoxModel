@@ -42,7 +42,9 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
                      '5258 BCE': {'data': sliceData(data, t0=1950 + 5258 - 15, t1=1950 + 5258 + 15, bp=True)},
                      '3480 BP': {'data': sliceData(data, -1532-15, -1532+15, bp=False)},
                      '664 BCE': {'data': sliceData(data, -664 - 15, -664 + 15, bp=False)},
+                     '479': {'data': sliceData(data, 479 - 15, 479 + 15, bp=False)},
                      '775': {'data': sliceData(data, 775 - 15, 775 + 15, bp=False)},
+                     '802': {'data': sliceData(data, 802 - 15, 802 + 15, bp=False)},
                      '840': {'data': sliceData(data, 840 - 15, 840 + 15)},
                      '955': {'data': sliceData(data, 955 - 15, 955 + 15)},
                      '993': {'data': sliceData(data, 993 - 15, 995 + 15, bp=False)},
@@ -259,7 +261,7 @@ def eventdetrenddataframe(df,plotfit=False,allevents=False,bonusyears=400):
             if allevents:
                 plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\Eventdetrendall')/f'EventDetrend{event}.png', bbox_inches='tight')
             else:
-                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\EventDetrendtest2')/f'EventDetrend{event}.png', bbox_inches='tight')
+                plt.savefig(Path(r'C:\Users\nbrehm.D.000\SynologyDrive\ETHPostdoc\Paper\Millennium\Graphs\EventDetrendtest')/f'EventDetrend{event}.png', bbox_inches='tight')
     for i, diff in enumerate(diffs):
         retdf['d14C'] = retdf['d14C'] - diff(1950-df['bp'])
         #retdf['d14C_sig'] = (retdf['d14C_sig']**2 + diff_stds[i](1950-df['bp'])**2)**0.5
