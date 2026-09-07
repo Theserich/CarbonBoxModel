@@ -196,7 +196,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
                                raw_delta=None, raw_deltasigm=None, detrend=False):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
-    Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
+    Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', totprod=totprod, dt=dt)
     if intcal:
         box0 = copy.deepcopy(Sim.getIntCalStartState(min(years) - 1, startdelta, 12))
     else:
@@ -306,7 +306,7 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
     [delta, deltasigm, years] = getDeltafromDataframe(df)
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
-    Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
+    Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', totprod=totprod, dt=dt)
     if intcal:
         box0 = copy.deepcopy(Sim.getIntCalStartState(min(years) - 1, startdelta, 12))
     else:
@@ -427,7 +427,7 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
 @cache_results2(file_format='pickle',cache_dir="getSimulationsCache")
 def getsimulations(delta, deltasigm, years, samples, intcal=False, dt=0.1, totprod=6.6e-12, thin=1, bonusyears=0):
     startdelta = np.mean(delta[:4])
-    Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', totprod=totprod, dt=dt)
+    Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', totprod=totprod, dt=dt)
     if intcal:
         box0 = copy.deepcopy(Sim.getIntCalStartState(min(years) - 1, startdelta, 12))
     else:

@@ -8,9 +8,6 @@
 #SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
 #SBATCH --array=0-599
 
-module load stack/2024-06
-module load python/3.11.6
-source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
 cd /cluster/scratch/nbrehm/CarbonBoxModel
 
 DATALABEL=${1:-Alldata}

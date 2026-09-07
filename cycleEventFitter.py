@@ -53,7 +53,7 @@ simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefit
 
 times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=50)
 
-Sim = BoxSimulator(fluxFile='StandartFluxes.xlsx', dt=dt)
+Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', dt=dt)
 
 
 alldelta, alldeltasigm, allyears = df['delta'], df['delta_sig'], df['year']

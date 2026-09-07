@@ -5,7 +5,7 @@ from Library.GlobalPathsAndConstants import *
 
 class BoxSimulator:
 
-    def __init__(self, totprod=6.6e-12, fluxFile='StandartFluxes.xlsx', dt=0.1):
+    def __init__(self, totprod=6.6e-12, fluxFile='NewFluxFile.xlsx', dt=0.1):
         self.dt = dt
         self.fluxFile = fluxFile
         self.fluxdf = pd.read_excel(projectPath/fluxesPath/self.fluxFile)
