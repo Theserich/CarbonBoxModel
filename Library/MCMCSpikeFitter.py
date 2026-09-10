@@ -11,12 +11,30 @@ datalabel = 'Alldata2026-07-08'
 dt = 0.1
 totprod = 6.6e-12
 
-def get_stats(samples):
+def get_stats(samples, weights):
     # Weighted mean (Peak/Centroid)
     mean = np.average(samples)
     # Weighted variance
     var = np.average((samples - mean)**2)
     return mean, np.sqrt(var)
+
+def weighted_circular_mean_rad(ang, weights):
+    S = np.sum(weights * np.sin(ang))
+    C = np.sum(weights * np.cos(ang))
+    return np.arctan2(S, C) % (2 * np.pi)
+
+def weighted_circular_std_rad(ang, weights):
+    w = weights / np.sum(weights)
+    S = np.sum(w * np.sin(ang))
+    C = np.sum(w * np.cos(ang))
+    R = np.sqrt(S ** 2 + C ** 2)
+    return np.sqrt(-2 * np.log(np.clip(R, 1e-10, 1)))
+
+def weighted_circular_mean_frac(frac, weights):
+    return weighted_circular_mean_rad(frac * 2 * np.pi, weights) / (2 * np.pi)
+
+def weighted_circular_std_frac(frac, weights):
+    return weighted_circular_std_rad(frac * 2 * np.pi, weights) / (2 * np.pi)
 
 def circular_mean(phases_frac):
     # Convert [0, 1] fraction to [0, 2π] radians

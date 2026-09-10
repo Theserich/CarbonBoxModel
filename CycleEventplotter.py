@@ -15,13 +15,12 @@ def gaussfunc(t, amp, times, width=0.15):
     return np.exp(-1 / 2 * (t - times) ** 2 / width ** 2) * amp*1e12
 
 eventdetrend = False
-allyears = np.arange(0,50,dtype=int)
+allyears = np.arange(0,20,dtype=int)
 
-data = loadexcel(projectPath/ Path(f'Data/DBsave/{datalabel}.xlsx'))
+datalabel = 'Alldata'
+data = calcD14C(getExcelData(datalabel))
 if eventdetrend:
     data = eventdetrenddataframe(data, plotfit=False)
-data = calcD14C(data)
-
 meandata = True
 
 

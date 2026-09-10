@@ -16,10 +16,10 @@ from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
-year = 774
+year = 840
 
 eventdetrend = False
-
+intcal = True
 dt = 0.1
 totprod = 6.6e-12
 
@@ -29,10 +29,10 @@ def gaussfunc(t, amp, times, width=0.15):
 
 
 meandata = True
-prepostyears = 15
+prepostyears = 20
 
-
-data = loadexcel(projectPath/ Path(f'Data/C14Records/{datalabel}.xlsx'))
+datalabel = 'Alldata'
+data = calcD14C(getExcelData(datalabel))
 if eventdetrend:
     data = eventdetrenddataframe(data, plotfit=False)
 
@@ -49,11 +49,9 @@ if meandata:
 else:
     delta, deltasigm, years = df['delta'], df['delta_sig'], df['year']
 
-simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)
+simtimes, prodcution, simdeltas, samples, weights, theta_map = MCMCCycleSpikefitterprior(delta, deltasigm, years,logprior)#year+0.5
+times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years, samples, intcal=intcal, thin=50)
 
-times, allsimprods, allsimdeltas = getsimulations(delta, deltasigm, years,samples,thin=50)
-
-Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', dt=dt)
 
 
 alldelta, alldeltasigm, allyears = df['delta'], df['delta_sig'], df['year']
@@ -105,17 +103,15 @@ for key in params_settings:
     params_settings[key]['posterior'] = posterior
 
 pairs = [(0, 1), (2, 0), (4, 5), (3, 5)]
-def get_stats(samples, weights):
-    # Weighted mean (Peak/Centroid)
-    mean = np.average(samples)
-    # Weighted variance
-    var = np.average((samples - mean)**2)
-    return mean, np.sqrt(var)
 
 # Calculate stats for each physical parameter directly
 stats = {}
 for i in range(6):
-    stats[i] = get_stats(samples_phys[:, i], weights)
+    if i == 3:
+        stats[i] = (weighted_circular_mean_frac(samples_phys[:, i], weights),
+                    weighted_circular_std_frac(samples_phys[:, i], weights))
+    else:
+        stats[i] = get_stats(samples_phys[:, i], weights)
 
 # Map them to your variables
 Excess, Excess_sig = stats[0]
