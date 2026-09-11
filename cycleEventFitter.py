@@ -17,7 +17,7 @@ from Library.EventDetrend import eventdetrenddataframe
 
 #select the year you want to fit around (e.g. 775, 994)
 year = 840
-
+logprior = logpriorcycle1
 eventdetrend = False
 intcal = True
 dt = 0.1

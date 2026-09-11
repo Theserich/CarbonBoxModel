@@ -196,7 +196,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
     key_fn=lambda delta, deltasigm, years, logprior,
                   dt=0.1, totprod=6.6e-12, N=1500, burnin=500, thin=1, intcal=True,
-                  raw_delta=None, raw_deltasigm=None, detrend=False, **kw:
+                  raw_delta=None, raw_deltasigm=None, detrend=False,fluxfile='NewFluxFile.xlsx', **kw:
         (
             int(np.mean(years)), int(np.min(years)), int(np.max(years)),
             tuple(round(float(x), 2) for x in
@@ -211,10 +211,10 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 )
 def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
                                dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
-                               raw_delta=None, raw_deltasigm=None, detrend=False):
+                               raw_delta=None, raw_deltasigm=None, detrend=False,fluxfile='NewFluxFile.xlsx'):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
-    Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', totprod=totprod, dt=dt)
+    Sim = BoxSimulator(fluxFile=fluxfile, totprod=totprod, dt=dt)
     if intcal:
         box0 = copy.deepcopy(Sim.getIntCalStartState(min(years) - 1, startdelta, 12))
     else:
@@ -443,9 +443,9 @@ def MCMCSpikeDetrenderCycle(df, eventyear=None, dt=0.1, totprod=6.6e-12, N=1000,
     return Sim.times, p[0][0](Sim.times) + Sim.eventproduction[0][0](Sim.times), deltas[12],deltasnoevent[12], samples, weights, theta_map
 
 @cache_results2(file_format='pickle',cache_dir="getSimulationsCache")
-def getsimulations(delta, deltasigm, years, samples, intcal=False, dt=0.1, totprod=6.6e-12, thin=1, bonusyears=0):
+def getsimulations(delta, deltasigm, years, samples, intcal=False, dt=0.1, totprod=6.6e-12, thin=1, bonusyears=0,fluxFile='NewFluxFile.xlsx'):
     startdelta = np.mean(delta[:4])
-    Sim = BoxSimulator(fluxFile='NewFluxFile.xlsx', totprod=totprod, dt=dt)
+    Sim = BoxSimulator(fluxFile=fluxFile, totprod=totprod, dt=dt)
     if intcal:
         box0 = copy.deepcopy(Sim.getIntCalStartState(min(years) - 1, startdelta, 12))
     else:
