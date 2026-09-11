@@ -10,8 +10,8 @@
 
 module load stack/2024-06
 module load python/3.11.6
-source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
-cd /cluster/scratch/nbrehm/CarbonBoxModel
+source /cluster/home/nbrehm/CarbonBoxModel/venv/bin/activate
+cd /cluster/home/nbrehm/CarbonBoxModel
 
 DATALABEL=${1:-Alldata}
 TOTAL_START=${2:--4000}    # NEW: year range now overridable, defaults match old behavior
