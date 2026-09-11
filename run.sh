@@ -16,11 +16,12 @@ cd /cluster/scratch/nbrehm/CarbonBoxModel
 DATALABEL=${1:-Alldata}
 TOTAL_START=${2:--4000}    # NEW: year range now overridable, defaults match old behavior
 TOTAL_END=${3:-2000}       # NEW
+PREPOSTYEARS=${4:-15}      # NEW: fitting window half-width, overridable
 
 CHUNK=15
 
 YEAR_START=$((TOTAL_START + SLURM_ARRAY_TASK_ID * CHUNK))
 YEAR_END=$((YEAR_START + CHUNK))
 
-echo "Job $SLURM_ARRAY_TASK_ID: years $YEAR_START to $YEAR_END, datalabel=$DATALABEL"
-python MCMC_runner.py --year_start $YEAR_START --year_end $YEAR_END --eventdetrend False --datalabel $DATALABEL
+echo "Job $SLURM_ARRAY_TASK_ID: years $YEAR_START to $YEAR_END, datalabel=$DATALABEL, prepostyears=$PREPOSTYEARS"
+python MCMC_runner.py --year_start $YEAR_START --year_end $YEAR_END --eventdetrend False --datalabel $DATALABEL --prepostyears $PREPOSTYEARS

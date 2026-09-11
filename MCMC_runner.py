@@ -29,6 +29,8 @@ parser.add_argument('--year_start', type=float, required=True)
 parser.add_argument('--year_end', type=float, required=True)
 parser.add_argument('--eventdetrend', type=str, default='False')
 parser.add_argument('--datalabel', type=str, default='Alldata')
+parser.add_argument('--prepostyears', type=int, default=15,
+                     help='Number of years before/after the target year to include in the fitting window.')
 args = parser.parse_args()
 
 year_start = args.year_start
@@ -36,6 +38,7 @@ year_end = args.year_end
 eventdetrend = args.eventdetrend.lower() == 'true'
 meandata = True
 datalabel = args.datalabel
+prepostyears = args.prepostyears
 
 # --- Load the raw data ONCE. This is what gets hashed for caching, since it
 # is identical byte-for-byte regardless of which machine loads it. ---
@@ -55,7 +58,6 @@ for year in range(int(year_start), int(year_end)):
     print(f"Processing year {year}", flush=True)
     dt = 0.1
     totprod = 6.6e-12
-    prepostyears = 15
 
     t0 = year - prepostyears
     t1 = year + prepostyears

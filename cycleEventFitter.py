@@ -29,7 +29,7 @@ def gaussfunc(t, amp, times, width=0.15):
 
 
 meandata = True
-prepostyears = 20
+prepostyears = 35
 
 datalabel = 'Alldata'
 data = calcD14C(getExcelData(datalabel))
