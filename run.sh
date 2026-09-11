@@ -4,8 +4,8 @@
 #SBATCH --mem-per-cpu=1G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
-#SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
+#SBATCH --output=/cluster/home/nbrehm/CarbonBoxModel/logs/%A_%a.out
+#SBATCH --error=/cluster/home/nbrehm/CarbonBoxModel/logs/%A_%a.err
 #SBATCH --array=0-599
 
 module load stack/2024-06
