@@ -5,6 +5,7 @@ from Library.cache_function import cache_results, cache_results2, cache_results_
 from Library.MCMCFunctions import emcee_weights, weighted_quantile
 from scipy.stats import norm, expon,truncnorm
 import copy
+from scipy.optimize import differential_evolution
 from scipy.stats import halfnorm
 
 datalabel = 'Alldata2026-07-08'
@@ -209,7 +210,6 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
         ),
     float_decimals=2
 )
-@cache_results(file_format='pickle', cache_dir=cache_dir/'CycleSpikesearchCacheprior3')
 def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
                                dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
                                raw_delta=None, raw_deltasigm=None, detrend=False, fluxfile='NewFluxFile.xlsx'):
