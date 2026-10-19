@@ -193,7 +193,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
 #cache_dir="CycleSpikesearchCacheprior"
 #cache_dir=os.path.join(os.environ["SCRATCH"], "CarbonBoxModel", "CycleSpikesearchCacheprior")
 @cache_results_Cluster(
-    cache_dir="CycleSpikesearchCacheprior",
+    cache_dir=os.path.join(os.environ["SCRATCH"], "CarbonBoxModel", "CycleSpikesearchCacheprior"),
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
     key_fn=lambda delta, deltasigm, years, logprior,
                   dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
