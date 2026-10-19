@@ -4,7 +4,7 @@ from pathlib import Path
 referenceBox = 12
 
 projectPath = Path(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
-
+cache_dir = Path(projectPath)/'cachedir'
 
 fluxesPath = 'FluxesAndContents/'
 Prod_DB_FileName = 'ResultDB/ProductionSaves/'

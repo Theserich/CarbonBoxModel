@@ -4,14 +4,14 @@
 #SBATCH --mem-per-cpu=1G
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --output=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.out
-#SBATCH --error=/cluster/scratch/nbrehm/CarbonBoxModel/logs/%A_%a.err
+#SBATCH --output=/cluster/home/nbrehm/CarbonBoxModel/logs/%A_%a.out
+#SBATCH --error=/cluster/home/nbrehm/CarbonBoxModel/logs/%A_%a.err
 #SBATCH --array=0-599
 
 module load stack/2024-06
 module load python/3.11.6
-source /cluster/scratch/nbrehm/CarbonBoxModel/venv/bin/activate
-cd /cluster/scratch/nbrehm/CarbonBoxModel
+source /cluster/home/nbrehm/CarbonBoxModel/venv/bin/activate
+cd /cluster/home/nbrehm/CarbonBoxModel
 
 DATALABEL=${1:-Alldata}
 TOTAL_START=${2:--4000}    # NEW: year range now overridable, defaults match old behavior
