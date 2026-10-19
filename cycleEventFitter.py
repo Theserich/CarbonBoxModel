@@ -14,7 +14,8 @@ import itertools
 from Library.plotfunctions import *
 from Library.MCMCSpikeFitter import *
 from Library.EventDetrend import eventdetrenddataframe
-
+from matplotlib import pyplot as plt
+from Library.SQLFunctions import *
 #select the year you want to fit around (e.g. 775, 994)
 year = 840
 
@@ -32,7 +33,11 @@ meandata = True
 prepostyears = 35
 
 datalabel = 'Alldata'
-data = calcD14C(getExcelData(datalabel))
+
+
+df = getData(0,1000,bp=False)
+
+data = calcD14C(df)
 if eventdetrend:
     data = eventdetrenddataframe(data, plotfit=False)
 

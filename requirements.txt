@@ -1,4 +1,3 @@
-
 numpy>=1.23
 scipy>=1.10
 pandas>=1.5
@@ -8,3 +7,6 @@ xlsxwriter>=3.1
 numba>=0.57
 openpyxl
 tqdm
+mysql-connector-python>=8.0
+PyQt5>=5.15
+keyring>=25.0
