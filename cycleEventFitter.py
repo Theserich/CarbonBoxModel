@@ -30,7 +30,7 @@ def gaussfunc(t, amp, times, width=0.15):
 
 
 meandata = True
-prepostyears = 35
+prepostyears = 15
 
 datalabel = 'Alldata'
 
