@@ -197,7 +197,7 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     label_fn=lambda delta, deltasigm, years, logprior, **kw: int(np.mean(years)),
     key_fn=lambda delta, deltasigm, years, logprior,
                   dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
-                  raw_delta=None, raw_deltasigm=None, detrend=False,fluxfile='NewFluxFile.xlsx', **kw:
+                  raw_delta=None, raw_deltasigm=None, detrend=False, fluxfile='NewFluxFile.xlsx', **kw:
         (
             int(np.mean(years)), int(np.min(years)), int(np.max(years)),
             tuple(round(float(x), 2) for x in
@@ -211,8 +211,8 @@ def get_probabilities(df,t0,t1,logprior,threshold=3):
     float_decimals=2
 )
 def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
-                               dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
-                               raw_delta=None, raw_deltasigm=None, detrend=False, fluxfile='NewFluxFile.xlsx'):
+                              dt=0.1, totprod=6.6e-12, N=2000, burnin=1000, thin=1, intcal=True,
+                              raw_delta=None, raw_deltasigm=None, detrend=False, fluxfile='NewFluxFile.xlsx'):
     sig0 = deltasigm[0]
     startdelta = np.mean(delta[:4])
     Sim = BoxSimulator(fluxFile=fluxfile, totprod=totprod, dt=dt)
@@ -276,13 +276,13 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
     # (a bit over one full period), NOT a physical constraint.
     # ---------------------------------------------------------------
     bounds_full = [
-        (0.0, 10 * totprod),                             # eventamp
-        (-totprod, 10 * totprod),                         # baseline
-        (minyear, maxyear),                               # event time
-        (-2 * np.pi, 4 * np.pi),                          # phase (search box only)
-        (1e-15, totprod),                                 # amp (>0 required by prior)
-        (5.0, 18.0),                                      # period
-        (startdelta - 5 * sig0, startdelta + 5 * sig0),   # delta0
+        (0.0, 10 * totprod),  # eventamp
+        (-totprod, 10 * totprod),  # baseline
+        (minyear, maxyear),  # event time
+        (-2 * np.pi, 4 * np.pi),  # phase (search box only)
+        (1e-15, totprod),  # amp (>0 required by prior)
+        (5.0, 18.0),  # period
+        (startdelta - 5 * sig0, startdelta + 5 * sig0),  # delta0
     ]
 
     def neg_log_posterior(theta):
@@ -346,7 +346,7 @@ def MCMCCycleSpikefitterprior(delta, deltasigm, years, logprior,
         ]
     )
 
-    sampler.run_mcmc(pos_std, N, progress=True)   # FIXED: pos_std, not pos
+    sampler.run_mcmc(pos_std, N, progress=True)  # FIXED: pos_std, not pos
 
     samples_std = sampler.get_chain(discard=burnin, thin=thin, flat=True)
     log_prob = sampler.get_log_prob(discard=burnin, thin=thin, flat=True)
